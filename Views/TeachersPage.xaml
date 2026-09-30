@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:Lab1MAUI.ViewModels"
+             x:Class="Lab1MAUI.Views.TeachersPage"
+             Title="Управління викладачами">
+
+    <!-- Прив'язка контексту до нашої ViewModel -->
+    <ContentPage.BindingContext>
+        <viewmodels:TeachersViewModel />
+    </ContentPage.BindingContext>
+
+    <VerticalStackLayout Padding="20" Spacing="15">
+        
+        <Label Text="Додати викладача" FontSize="20" FontAttributes="Bold" />
+
+        <!-- Частина 1.4: TwoWay Binding для полів вводу -->
+        <Entry Text="{Binding LastName, Mode=TwoWay}" Placeholder="Прізвище" />
+        <Entry Text="{Binding FirstName, Mode=TwoWay}" Placeholder="Ім'я" />
+        <Entry Text="{Binding Patronymic, Mode=TwoWay}" Placeholder="По батькові" />
+        
+        <!-- Частина 1.4: OneWay Binding для прев'ю -->
+        <Label Text="{Binding FullNamePreview, Mode=OneWay}" TextColor="Gray" FontAttributes="Italic" />
+
+        <!-- Частина 2.1: Прив'язка команди до кнопки -->
+        <Button Text="Додати" 
+                Command="{Binding AddTeacherCommand}" 
+                BackgroundColor="#2B0B98" 
+                TextColor="White" />
+
+        <BoxView HeightRequest="1" Color="LightGray" Margin="0,10" />
+        
+        <Label Text="Список викладачів" FontSize="18" FontAttributes="Bold" />
+
+        <!-- Частина 2.2: Відображення списку через CollectionView -->
+        <CollectionView ItemsSource="{Binding Teachers}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Margin="0,5" Padding="15" CornerRadius="8" HasShadow="True">
+                        <!-- Name тут береться з моделі Teacher (яка лежить всередині ObservableCollection) -->
+                        <Label Text="{Binding Name}" FontSize="16" />
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+    </VerticalStackLayout>
+</ContentPage>
