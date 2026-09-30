@@ -11,6 +11,7 @@ public class DashboardViewModel : BaseViewModel
 
     public int TotalTeachers => _schedule.Teachers.Count;
     public int TotalGroups => _schedule.Groups.Count;
+    public int TotalDisciplines => _schedule.Disciplines.Count;
 
     private bool _isGenerating;
     public bool IsGenerating
@@ -28,6 +29,13 @@ public class DashboardViewModel : BaseViewModel
         // Команда активна тільки якщо не відбувається генерація
         GenerateScheduleCommand = new Command(async () => await GenerateScheduleAsync(), () => !IsGenerating);
     }
+    
+    public void RefreshStats()
+    {
+        OnPropertyChanged(nameof(TotalTeachers));
+        OnPropertyChanged(nameof(TotalGroups));
+        OnPropertyChanged(nameof(TotalDisciplines));
+    }
 
     private async Task GenerateScheduleAsync()
     {
@@ -44,6 +52,6 @@ public class DashboardViewModel : BaseViewModel
         ((Command)GenerateScheduleCommand).ChangeCanExecute();
 
         // Перехід на сторінку результатів через Shell
-        await Shell.Current.GoToAsync("ScheduleResultPage");
+        await BaseViewModel.NavigationAction("ScheduleResultPage");
     }
 }

@@ -23,14 +23,39 @@ public class LessonPlacementConstraint : IConstraint
 
         if (teacher == null || group == null) return;
 
-        // Шукаємо першу вільну комірку і застосовуємо
-        for (int i = 0; i < schedule.Config.TotalCells; i++)
+        int cellsPerDay = schedule.Config.CellsPerDay;
+
+        // Поступове послаблення обмежень: спочатку шукаємо день, де цього предмета ще немає (0),
+        // потім де він є 1 раз, потім 2 рази і т.д.
+        for (int allowedPerDay = 1; allowedPerDay <= cellsPerDay; allowedPerDay++)
         {
-            if (teacher.Grid.IsFree(i) && group.Grid.IsFree(i))
+            for (int i = 0; i < schedule.Config.TotalCells; i++)
             {
-                teacher.Grid.Place(_lesson.Id, i);
-                group.Grid.Place(_lesson.Id, i);
-                return; // Застосовано успішно
+                if (teacher.Grid.IsFree(i) && group.Grid.IsFree(i))
+                {
+                    int day = i / cellsPerDay;
+                    int subjectCountInDay = 0;
+
+                    for (int c = day * cellsPerDay; c < (day + 1) * cellsPerDay; c++)
+                    {
+                        var cellLessonId = group.Grid.Cells[c];
+                        if (cellLessonId.HasValue)
+                        {
+                            var cellLesson = schedule.Lessons.FirstOrDefault(l => l.Id == cellLessonId.Value);
+                            if (cellLesson != null && cellLesson.DisciplineId == _lesson.DisciplineId)
+                            {
+                                subjectCountInDay++;
+                            }
+                        }
+                    }
+
+                    if (subjectCountInDay < allowedPerDay)
+                    {
+                        teacher.Grid.Place(_lesson.Id, i);
+                        group.Grid.Place(_lesson.Id, i);
+                        return; // Застосовано успішно
+                    }
+                }
             }
         }
     }

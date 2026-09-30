@@ -6,10 +6,10 @@
 
 Шар Model відповідає виключно за бізнес-логіку предметної області.
 
-- **Предметна область (Навчальний план)**: Введено поняття дисциплін (`Discipline`) та типів занять (`LessonType`: Лекція, Практика, Лабораторна). Групи мають вимоги щодо кількості годин (`GroupRequirement`), а викладачі — свої компетенції (`TeacherCompetence`) та цільове навантаження.
+- **Предметна область (Навчальний план)**: Введено поняття дисциплін (`Discipline`). Тип заняття (Лекція, Практика, Лабораторна) більше не є окремим полем (`LessonType` видалено). Замість цього створюються окремі дисципліни з відповідною приставкою (наприклад, "Математика [Лк]", "Математика [Пр]"). Групи мають вимоги щодо кількості годин на дисципліну (`GroupRequirement`), а викладачі — свої компетенції (`TeacherCompetence`). Дисципліни, як і викладачі та групи, можуть мати власні обмеження (`Constraints`), які враховуються розкладом.
 - **Генерація замість видалення**: Уроки не передаються ззовні як готовий список. Замість цього метод `Schedule.InitializeData()` на основі вимог груп та компетенцій викладачів автоматично генерує (`спавнить`) об'єкти `Lesson`. Жодне обмеження не додає і не видаляє уроки — вони лише змінюють властивості (наприклад, призначають викладача чи змінюють час).
 - **Композиція замість наслідування**: Викладачі та Групи володіють компонентом `TimeGrid`, який інкапсулює управління часовими комірками.
-- **Гнучка система правил**: Усі вимоги щодо розкладу реалізовані через інтерфейс `IConstraint`.
+- **Гнучка система правил**: Усі вимоги щодо розкладу реалізовані через інтерфейс `IConstraint`. При виборі дисципліни користувач не вписує її ID вручну — використовується випадаючий список з пошуком, реалізований через окрему ViewModel.
 
 ---
 
@@ -46,24 +46,17 @@ classDiagram
     class Discipline {
         +Guid Id
         +string Name
-    }
-
-    class LessonType {
-        <<enumeration>>
-        Lecture
-        Practice
-        Lab
+        +List~IConstraint~ Constraints
+        +GetPersonalConstraints(int totalCells) List~IConstraint~
     }
 
     class GroupRequirement {
         +Guid DisciplineId
-        +LessonType Type
         +int RequiredHours
     }
 
     class TeacherCompetence {
         +Guid DisciplineId
-        +LessonType Type
     }
 
     %% Компонент розкладу (Композиція)
@@ -98,7 +91,6 @@ classDiagram
         +Guid TeacherId
         +Guid StudentGroupId
         +Guid DisciplineId
-        +LessonType Type
     }
 
     %% Система обмежень
@@ -209,34 +201,33 @@ flowchart TD
     Shell["AppShell / Головне Меню"]
 
     %% Основні сторінки (Вкладки/Пункти меню)
-    Shell --> Dashboard["DashboardPage (Головна)"]
-    Shell --> Settings["SettingsPage (Параметри)"]
-    Shell --> Disciplines["DisciplinesPage (Дисципліни)"]
-    Shell --> Teachers["TeachersPage (Викладачі)"]
-    Shell --> Groups["StudentGroupsPage (Групи)"]
-    Shell --> ScheduleResult["ScheduleResultPage (Розклад)"]
-
-    %% Внутрішня стекова навігація
-    Disciplines -- "Додати / Редагувати" --> DisciplineEdit["DisciplineEditPage"]
+    Shell --> Dashboard["DashboardPage"]
+    Shell --> Settings["SettingsPage"]
+    Shell --> Disciplines["DisciplinesPage"]
+    Shell --> Teachers["TeachersPage"]
+    Shell --> Groups["StudentGroupsPage"]
     
-    Teachers -- "Додати / Редагувати" --> TeacherEdit["TeacherEditPage (+Компетенції)"]
-    TeacherEdit -- "Налаштувати обмеження" --> ConstraintsEdit["ConstraintsEditPage"]
+    %% Сторінки редагування (Push Navigation)
+    Disciplines -- "Редагувати" --> DisciplineEdit["DisciplineEditPage"]
+    Teachers -- "Редагувати" --> TeacherEdit["TeacherEditPage"]
+    Groups -- "Редагувати" --> GroupEdit["GroupEditPage"]
     
-    Groups -- "Додати / Редагувати" --> GroupEdit["StudentGroupEditPage (+Вимоги)"]
-    GroupEdit -- "Налаштувати обмеження" --> ConstraintsEdit
+    %% Модальне вікно вибору дисциплін
+    TeacherEdit -. "Відкриває" .-> SelectionModal["DisciplineSelectionPage (Модальне вікно)"]
+    GroupEdit -. "Відкриває" .-> SelectionModal
     
     %% Логіка генерації
-    Dashboard -- "Згенерувати" --> GenerateAction{"Процес Генерації"}
-    GenerateAction -- "Успіх" --> ScheduleResult
+    Dashboard -- "Генерація" --> ScheduleResult["ScheduleResultPage"]
 ```
 
-### Короткий опис сторінок
-1. **DashboardPage**: Керуючий центр. Показує статистику (кількість груп, викладачів) і має головну кнопку "Згенерувати розклад".
-2. **SettingsPage**: Форма для введення `Days` та `CellsPerDay`.
-3. **DisciplinesPage / EditPage**: CRUD для предметів.
-4. **TeachersPage / EditPage**: Список викладачів. На сторінці редагування можна додавати `TeacherCompetence` та переходити до списку персональних обмежень (`ConstraintsEditPage`).
-5. **StudentGroupsPage / EditPage**: Список груп. На сторінці редагування можна додавати `GroupRequirement` (Скільки годин якого предмету треба) та переходити до їхніх обмежень.
-6. **ScheduleResultPage**: Сторінка з `Picker` (вибір викладача або групи). Нижче відображається двовимірна сітка (CollectionView або Grid), де видно розклад обраного учасника. Також тут виводиться список нерозподілених уроків.
+### Деталі взаємодії (UI Flow)
+1. **Головне меню (Flyout/Tabs)**: Швидка навігація між списками сутностей та налаштуваннями.
+2. **DisciplineEditPage**: Дозволяє задати назву дисципліни (включаючи приставки `[Лк/Пр/Лб]`) та налаштувати специфічні для неї обмеження (через міні-меню на цій же сторінці).
+3. **TeacherEditPage / GroupEditPage**: 
+   - Налаштовує параметри викладача/групи.
+   - Для прив'язки компетенцій чи вимог користувач не вводить ID вручну. Замість цього відкривається **DisciplineSelectionPage**.
+   - **DisciplineSelectionPage**: Окреме модальне вікно або випадаючий компонент із рядком пошуку. Користувач вводить назву, бачить відфільтрований список і клікає на потрібну дисципліну, після чого вона автоматично прив'язується.
+   - Має міні-меню (ConstraintForm) для додавання обмежень (з ручним сортуванням за пріоритетом).
 
 ## Архітектура ViewModels (MVVM)
 
@@ -244,7 +235,7 @@ flowchart TD
 
 ```mermaid
 classDiagram
-    direction TB
+    direction LR
     
     class INotifyPropertyChanged {
         <<interface>>
@@ -261,34 +252,112 @@ classDiagram
     class DashboardViewModel {
         +int TotalTeachers
         +int TotalGroups
+        +int TotalDisciplines
         +ICommand GenerateScheduleCommand
+    }
+    
+    class SettingsViewModel {
+        +int Days
+        +int CellsPerDay
+        +int TotalCells
+    }
+    
+    class DisciplinesViewModel {
+        +Collection~Discipline~ Disciplines
+        +ICommand AddDisciplineCommand
+        +ICommand DeleteDisciplineCommand
+    }
+    
+    class DisciplineEditViewModel {
+        +string Name
+        +Collection~IConstraint~ Constraints
+        +ICommand SaveCommand
+        +ICommand DeleteConstraintCommand
     }
 
     class TeachersViewModel {
-        +ObservableCollection~Teacher~ Teachers
+        +Collection~Teacher~ Teachers
+        +ICommand AddTeacherCommand
+        +ICommand EditTeacherCommand
+        +ICommand DeleteTeacherCommand
+        +ICommand MoveUpTeacherCommand
+        +ICommand MoveDownTeacherCommand
+    }
+    
+    class TeacherEditViewModel {
         +string FirstName
         +string LastName
         +string Patronymic
-        +string FullNamePreview
-        +ICommand AddTeacherCommand
-        -bool CanAddTeacher()
+        +int TargetHours
+        +Collection~TeacherCompetence~ Competences
+        +Collection~IConstraint~ Constraints
+        +ICommand SaveCommand
+        +ICommand AddCompetenceCommand
+        +ICommand DeleteCompetenceCommand
     }
 
     class StudentGroupsViewModel {
-        +ObservableCollection~StudentGroup~ Groups
-        +string GroupName
+        +Collection~StudentGroup~ Groups
         +ICommand AddGroupCommand
+        +ICommand EditGroupCommand
+        +ICommand DeleteGroupCommand
+        +ICommand MoveUpGroupCommand
+        +ICommand MoveDownGroupCommand
+    }
+    
+    class GroupEditViewModel {
+        +string GroupName
+        +int TargetHours
+        +Collection~GroupRequirement~ Requirements
+        +Collection~IConstraint~ Constraints
+        +ICommand SaveCommand
+        +ICommand AddRequirementCommand
+        +ICommand DeleteRequirementCommand
+    }
+
+    class ConstraintFormViewModel {
+        +Collection~string~ ConstraintTypes
+        +string SelectedConstraintType
+        +int DailyLimitValue
+        +int MaxConsecutiveValue
+        +int TimeOffCellIndex
+        +string AssignmentTeacherId
+        +ICommand AddConstraintCommand
+    }
+
+    class DisciplineSelectionViewModel {
+        +Collection~Discipline~ FilteredDisciplines
+        +string SearchQuery
+        +Discipline SelectedDiscipline
+        +ICommand SelectCommand
     }
 
     class ScheduleResultViewModel {
-        +ObservableCollection~Lesson~ UnassignedLessons
-        +ObservableCollection~TimeSlot~ GridCells
+        +Collection~Lesson~ UnassignedLessons
+        +Collection~TimeSlot~ GridCells
         +ICommand ExportCommand
     }
 
-    INotifyPropertyChanged <|.. BaseViewModel : реалізує
-    BaseViewModel <|-- DashboardViewModel : наслідує
-    BaseViewModel <|-- TeachersViewModel : наслідує
-    BaseViewModel <|-- StudentGroupsViewModel : наслідує
-    BaseViewModel <|-- ScheduleResultViewModel : наслідує
+    %% Наслідування від BaseViewModel
+    INotifyPropertyChanged <|.. BaseViewModel
+    BaseViewModel <|-- DashboardViewModel
+    BaseViewModel <|-- SettingsViewModel
+    BaseViewModel <|-- DisciplinesViewModel
+    BaseViewModel <|-- DisciplineEditViewModel
+    BaseViewModel <|-- TeachersViewModel
+    BaseViewModel <|-- TeacherEditViewModel
+    BaseViewModel <|-- StudentGroupsViewModel
+    BaseViewModel <|-- GroupEditViewModel
+    BaseViewModel <|-- ScheduleResultViewModel
+    BaseViewModel <|-- ConstraintFormViewModel
+    BaseViewModel <|-- DisciplineSelectionViewModel
+
+    %% Композиція та використання компонентів (дочірні ViewModels)
+    DisciplineEditViewModel *-- ConstraintFormViewModel : використовує
+    
+    TeacherEditViewModel *-- ConstraintFormViewModel : використовує
+    TeacherEditViewModel *-- DisciplineSelectionViewModel : використовує
+    
+    GroupEditViewModel *-- ConstraintFormViewModel : використовує
+    GroupEditViewModel *-- DisciplineSelectionViewModel : використовує
 ```

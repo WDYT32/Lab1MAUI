@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Lab1MAUI.Views.DashboardPage"
+             Title="Головна">
+
+    <VerticalStackLayout Padding="30" Spacing="20" VerticalOptions="Center">
+        <Label Text="Генератор Розкладу" FontSize="28" FontAttributes="Bold" HorizontalOptions="Center" />
+        
+        <Frame Padding="20" CornerRadius="10" BackgroundColor="#F3F4F6">
+            <VerticalStackLayout Spacing="10">
+                <Label Text="{Binding TotalTeachers, StringFormat='Викладачів у базі: {0}'}" FontSize="18" />
+                <Label Text="{Binding TotalGroups, StringFormat='Груп у базі: {0}'}" FontSize="18" />
+                <Label Text="{Binding TotalDisciplines, StringFormat='Дисциплін у базі: {0}'}" FontSize="18" />
+            </VerticalStackLayout>
+        </Frame>
+
+        <Button Text="Згенерувати розклад" 
+                Command="{Binding GenerateScheduleCommand}"
+                BackgroundColor="#2B0B98" 
+                TextColor="White"
+                HeightRequest="50"
+                FontSize="18"
+                CornerRadius="25"/>
+
+        <!-- Індикатор завантаження прив'язаний до властивості IsGenerating -->
+        <ActivityIndicator IsRunning="{Binding IsGenerating}" IsVisible="{Binding IsGenerating}" Color="#2B0B98" />
+    </VerticalStackLayout>
+</ContentPage>

@@ -55,8 +55,7 @@ namespace Lab1MAUI.Tests
             { 
                 StudentGroupId = group.Id, 
                 TeacherId = Guid.Empty,
-                DisciplineId = Guid.NewGuid(), // Дисципліна, яку ніхто не знає
-                Type = LessonType.Lecture
+                DisciplineId = Guid.NewGuid() // Дисципліна, яку ніхто не знає
             };
             schedule.Lessons.Add(lesson);
 

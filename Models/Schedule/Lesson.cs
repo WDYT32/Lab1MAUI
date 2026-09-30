@@ -9,13 +9,10 @@ public class Lesson
     public Guid TeacherId { get; set; }
     public Guid StudentGroupId { get; set; }
     public Guid DisciplineId { get; set; }
-    public LessonType Type { get; set; }
     public string SubjectName { get; set; } = string.Empty;
     
     public List<IConstraint> GetLessonConstraints()
     {
-        if (TeacherId == Guid.Empty) return new List<IConstraint>();
-        
         return new List<IConstraint>
         {
             new LessonPlacementConstraint(this)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace Lab1MAUI.Models.Schedule;
@@ -10,6 +11,7 @@ public class Schedule
     public List<Teacher> Teachers { get; set; } = new();
     public List<StudentGroup> Groups { get; set; } = new();
     public List<Lesson> Lessons { get; set; } = new();
+    public List<Discipline> Disciplines { get; set; } = new();
     public ConstraintRegistry Registry { get; set; } = new();
 
     public Schedule() { }
@@ -31,6 +33,7 @@ public class Schedule
 
     public void InitializeData()
     {
+        Lessons.Clear();
         int total = Config.TotalCells;
         var rnd = new Random();
 
@@ -55,29 +58,23 @@ public class Schedule
         {
             foreach (var req in group.Requirements)
             {
-                var capableTeachers = Teachers.Where(t => 
-                    t.Competences.Any(c => c.DisciplineId == req.DisciplineId && c.Type == req.Type)).ToList();
-
-                if (!capableTeachers.Any()) continue; 
-
+                var disciplineName = Disciplines.FirstOrDefault(d => d.Id == req.DisciplineId)?.Name ?? "Generated";
+                
                 for (int i = 0; i < req.RequiredHours; i++)
                 {
-                    // Випадковий вибір для початкового балансу
-                    var teacher = capableTeachers.OrderBy(x => Guid.NewGuid()).First();
-
                     var lesson = new Lesson
                     {
                         StudentGroupId = group.Id,
-                        TeacherId = teacher.Id,
+                        TeacherId = Guid.Empty, // Призначення відбувається у TeacherAssignmentConstraint
                         DisciplineId = req.DisciplineId,
-                        Type = req.Type,
-                        SubjectName = $"{req.Type} (Generated)"
+                        SubjectName = disciplineName
                     };
                     
                     Lessons.Add(lesson);
                 }
             }
-            group.Requirements.Clear();
+            // НЕ ОЧИЩАЙМО ВИМОГИ ТУТ, ІНАКШЕ ДРУГЕ ГЕНЕРУВАННЯ ПУСТЕ!
+            // group.Requirements.Clear(); 
         }
     }
 
@@ -86,14 +83,55 @@ public class Schedule
         Registry = new ConstraintRegistry();
         int total = Config.TotalCells;
 
-        foreach (var t in Teachers)
+        // Вчителі: позиція у списку - це множник пріоритету
+        for (int i = 0; i < Teachers.Count; i++)
         {
-            foreach (var c in t.GetPersonalConstraints(total)) Registry.Register(c);
+            var t = Teachers[i];
+            int entityMultiplier = Teachers.Count - i;
+            
+            var personalConstraints = t.GetPersonalConstraints(total);
+            for (int j = 0; j < personalConstraints.Count; j++)
+            {
+                var c = personalConstraints[j];
+                int constraintWeight = personalConstraints.Count - j;
+                
+                c.Priority += entityMultiplier * constraintWeight * 10;
+                Registry.Register(c);
+            }
         }
 
-        foreach (var g in Groups)
+        // Групи: позиція у списку - це множник пріоритету
+        for (int i = 0; i < Groups.Count; i++)
         {
-            foreach (var c in g.GetPersonalConstraints(total)) Registry.Register(c);
+            var g = Groups[i];
+            int entityMultiplier = Groups.Count - i;
+            
+            var personalConstraints = g.GetPersonalConstraints(total);
+            for (int j = 0; j < personalConstraints.Count; j++)
+            {
+                var c = personalConstraints[j];
+                int constraintWeight = personalConstraints.Count - j;
+                
+                c.Priority += entityMultiplier * constraintWeight * 10;
+                Registry.Register(c);
+            }
+        }
+        
+        // Дисципліни: позиція у списку - це множник пріоритету
+        for (int i = 0; i < Disciplines.Count; i++)
+        {
+            var d = Disciplines[i];
+            int entityMultiplier = Disciplines.Count - i;
+            
+            var personalConstraints = d.GetPersonalConstraints(total);
+            for (int j = 0; j < personalConstraints.Count; j++)
+            {
+                var c = personalConstraints[j];
+                int constraintWeight = personalConstraints.Count - j;
+                
+                c.Priority += entityMultiplier * constraintWeight * 10;
+                Registry.Register(c);
+            }
         }
 
         foreach (var l in Lessons)

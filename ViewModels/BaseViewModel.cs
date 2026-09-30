@@ -24,5 +24,12 @@ namespace Lab1MAUI.ViewModels
             OnPropertyChanged(propertyName);
             return true;
         }
+
+        // Делегат для ін'єкції навігації в тестах
+        public static System.Func<string, System.Threading.Tasks.Task> NavigationAction = async (route) => 
+        {
+            if (Microsoft.Maui.Controls.Shell.Current != null)
+                await Microsoft.Maui.Controls.Shell.Current.GoToAsync(route);
+        };
     }
 }

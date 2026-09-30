@@ -8,78 +8,78 @@ namespace Lab1MAUI.ViewModels
     // Повна реалізація вимог Частини 2 (ICommand, ObservableCollection)
     public class TeachersViewModel : BaseViewModel
     {
+        private readonly Schedule _schedule;
         public ObservableCollection<Teacher> Teachers { get; } = new();
 
-        private string _firstName = string.Empty;
-        public string FirstName
-        {
-            get => _firstName;
-            set
-            {
-                if (SetProperty(ref _firstName, value))
-                    ((Command)AddTeacherCommand).ChangeCanExecute(); // Оновлюємо стан кнопки
-            }
-        }
-
-        private string _lastName = string.Empty;
-        public string LastName
-        {
-            get => _lastName;
-            set
-            {
-                if (SetProperty(ref _lastName, value))
-                    ((Command)AddTeacherCommand).ChangeCanExecute();
-            }
-        }
-
-        private string _patronymic = string.Empty;
-        public string Patronymic
-        {
-            get => _patronymic;
-            set => SetProperty(ref _patronymic, value);
-        }
-
-        // OneWay Binding (Частина 1.4)
-        public string FullNamePreview => $"Новий викладач: {LastName} {FirstName} {Patronymic}".Trim();
-
         public ICommand AddTeacherCommand { get; }
+        public ICommand EditTeacherCommand { get; }
+        public ICommand DeleteTeacherCommand { get; }
+        public ICommand DragStartingCommand { get; }
+        public ICommand DropCommand { get; }
 
-        public TeachersViewModel()
+        private Teacher _draggedTeacher;
+
+        public TeachersViewModel(Schedule schedule)
         {
-            // Частина 2.1: Команда з делегатами Execute та CanExecute
-            AddTeacherCommand = new Command(AddTeacher, CanAddTeacher);
-
-            // Підписуємося на власні події, щоб оновлювати рядок Preview
-            PropertyChanged += (s, e) =>
+            _schedule = schedule;
+            
+            LoadTeachers();
+            
+            AddTeacherCommand = new Command(async () => 
             {
-                if (e.PropertyName == nameof(FirstName) || 
-                    e.PropertyName == nameof(LastName) || 
-                    e.PropertyName == nameof(Patronymic))
-                {
-                    OnPropertyChanged(nameof(FullNamePreview));
-                }
-            };
-        }
-
-        private void AddTeacher()
-        {
-            Teachers.Add(new Teacher
+                await BaseViewModel.NavigationAction("TeacherEditPage?id=new");
+            });
+            
+            EditTeacherCommand = new Command<Teacher>(async (teacher) => 
             {
-                FirstName = this.FirstName,
-                LastName = this.LastName,
-                Patronymic = this.Patronymic
+                if (teacher != null)
+                    await BaseViewModel.NavigationAction($"TeacherEditPage?id={teacher.Id}");
             });
 
-            // Очищення полів після додавання
-            FirstName = string.Empty;
-            LastName = string.Empty;
-            Patronymic = string.Empty;
+            DeleteTeacherCommand = new Command<Teacher>((teacher) => 
+            {
+                if (teacher != null)
+                {
+                    Teachers.Remove(teacher);
+                    _schedule.Teachers.Remove(teacher);
+                }
+            });
+
+            DragStartingCommand = new Command<Teacher>(teacher => _draggedTeacher = teacher);
+            
+            DropCommand = new Command<Teacher>(teacher => 
+            {
+                if (_draggedTeacher != null && _draggedTeacher != teacher)
+                {
+                    var draggedIndex = Teachers.IndexOf(_draggedTeacher);
+                    var dropIndex = Teachers.IndexOf(teacher);
+                    
+                    if (draggedIndex >= 0 && dropIndex >= 0)
+                    {
+                        Teachers.Move(draggedIndex, dropIndex);
+                        SyncScheduleList();
+                    }
+                }
+                _draggedTeacher = null;
+            });
         }
 
-        // Валідація: кнопка працює лише якщо введено Прізвище та Ім'я
-        private bool CanAddTeacher()
+        public void LoadTeachers()
         {
-            return !string.IsNullOrWhiteSpace(FirstName) && !string.IsNullOrWhiteSpace(LastName);
+            Teachers.Clear();
+            foreach (var t in _schedule.Teachers)
+            {
+                Teachers.Add(t);
+            }
+        }
+
+        private void SyncScheduleList()
+        {
+            _schedule.Teachers.Clear();
+            foreach (var t in Teachers)
+            {
+                _schedule.Teachers.Add(t);
+            }
         }
     }
 }

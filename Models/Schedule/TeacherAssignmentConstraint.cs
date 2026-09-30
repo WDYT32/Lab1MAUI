@@ -10,14 +10,12 @@ public class TeacherAssignmentConstraint : IConstraint
     
     private readonly Guid? _specificTeacherId;
     private readonly Guid? _disciplineId;
-    private readonly LessonType? _lessonType;
 
-    public TeacherAssignmentConstraint(StudentGroup group, Guid? specificTeacherId = null, Guid? disciplineId = null, LessonType? type = null)
+    public TeacherAssignmentConstraint(StudentGroup group, Guid? specificTeacherId = null, Guid? disciplineId = null)
     {
         OwnerId = group.Id;
         _specificTeacherId = specificTeacherId;
         _disciplineId = disciplineId;
-        _lessonType = type;
     }
 
     public void Apply(Schedule schedule)
@@ -27,7 +25,6 @@ public class TeacherAssignmentConstraint : IConstraint
             .ToList();
 
         if (_disciplineId.HasValue) unassignedLessons = unassignedLessons.Where(l => l.DisciplineId == _disciplineId.Value).ToList();
-        if (_lessonType.HasValue) unassignedLessons = unassignedLessons.Where(l => l.Type == _lessonType.Value).ToList();
 
         foreach (var lesson in unassignedLessons)
         {
@@ -40,7 +37,7 @@ public class TeacherAssignmentConstraint : IConstraint
             else
             {
                 var capable = schedule.Teachers.Where(t => 
-                    t.Competences.Any(c => c.DisciplineId == lesson.DisciplineId && c.Type == lesson.Type)).ToList();
+                    t.Competences.Any(c => c.DisciplineId == lesson.DisciplineId)).ToList();
 
                 if (capable.Any())
                 {

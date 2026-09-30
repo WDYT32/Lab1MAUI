@@ -27,7 +27,11 @@ namespace Lab1MAUI.Tests
 
             var schedule = new Schedule(config, new List<Teacher> { teacher1, teacher2 }, new List<StudentGroup> { group1, group2 }, lessons);
 
-            schedule.Generate();
+            foreach (var t in schedule.Teachers) t.Grid.Initialize(schedule.Config.TotalCells);
+            foreach (var g in schedule.Groups) g.Grid.Initialize(schedule.Config.TotalCells);
+            
+            schedule.CollectAllConstraints();
+            schedule.ApplyConstraintsMainLoop();
 
             var t1 = schedule.Teachers.First(t => t.Id == teacher1.Id);
             var t2 = schedule.Teachers.First(t => t.Id == teacher2.Id);

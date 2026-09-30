@@ -17,6 +17,8 @@ public class DailyLimitConstraint : IConstraint
         _maxLessonsPerDay = maxLessonsPerDay;
     }
 
+    public override string ToString() => $"Ліміт занять на день: {_maxLessonsPerDay}";
+
     public void Apply(Schedule schedule)
     {
         var grid = schedule.Teachers.FirstOrDefault(t => t.Id == OwnerId)?.Grid 

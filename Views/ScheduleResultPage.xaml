@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Lab1MAUI.Views.ScheduleResultPage"
+             Title="Результат розкладу">
+
+    <Grid RowDefinitions="Auto, Auto, Auto, *" Padding="20" RowSpacing="15">
+        <Label Grid.Row="0" Text="Нерозподілені уроки (Без викладача)" FontSize="18" FontAttributes="Bold" TextColor="Red" 
+               IsVisible="{Binding HasUnassignedLessons}" />
+
+        <CollectionView Grid.Row="1" ItemsSource="{Binding UnassignedLessons}" MaximumHeightRequest="150">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Margin="0,5" Padding="15" CornerRadius="8" BorderColor="Red" HasShadow="False">
+                        <Label Text="{Binding SubjectName, StringFormat='Дисципліна: {0}'}" FontSize="16" />
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            <CollectionView.EmptyView>
+                <!-- Відображається, якщо колекція порожня -->
+                <Label Text="Всі уроки успішно розподілені! Викладачів призначено." TextColor="Green" FontAttributes="Bold" FontSize="16" HorizontalOptions="Center" />
+            </CollectionView.EmptyView>
+        </CollectionView>
+
+        <Label Grid.Row="2" Text="Сформований розклад по групах" FontSize="18" FontAttributes="Bold" Margin="0,10,0,0" />
+
+        <CollectionView Grid.Row="3" ItemsSource="{Binding GroupSchedules}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <VerticalStackLayout Margin="0,10">
+                        <Label Text="{Binding GroupName}" FontSize="20" FontAttributes="Bold" TextColor="White" BackgroundColor="#4198B4" Padding="10" HorizontalTextAlignment="Center" Margin="0,0,0,10" />
+                        
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Days}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <VerticalStackLayout Margin="0,5">
+                                        <!-- Day Header -->
+                                        <Label Text="{Binding DayName}" FontSize="18" TextColor="{Binding MainColor}" HorizontalOptions="Center" Margin="0,5,0,5" FontAttributes="Bold" />
+                                        
+                                        <!-- Lessons in Day -->
+                                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Lessons}" Spacing="2">
+                                            <BindableLayout.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid ColumnDefinitions="60, *, 60" BackgroundColor="{Binding LightColor}" Padding="0" Margin="0,0,0,2">
+                                                        <!-- Left Column (Lesson Number) -->
+                                                        <BoxView Grid.Column="0" Color="{Binding MainColor}" />
+                                                        <Label Grid.Column="0" Text="{Binding TimeSlotName}" TextColor="White" FontSize="20" HorizontalOptions="Center" VerticalOptions="Center" FontAttributes="Bold" />
+                                                        
+                                                        <!-- Middle Column (Info) -->
+                                                        <VerticalStackLayout Grid.Column="1" Padding="10,5">
+                                                            <Label Text="{Binding SubjectName}" FontSize="16" TextColor="{Binding MainColor}" FontAttributes="Bold" />
+                                                            <Label Text="{Binding RoomName}" FontSize="14" TextColor="Black" />
+                                                            <Label Text="{Binding TeacherName}" FontSize="14" TextColor="LightGray" />
+                                                        </VerticalStackLayout>
+                                                        
+                                                        <!-- Right Column (Info button) -->
+                                                        <Border Grid.Column="2" Stroke="#4198B4" StrokeThickness="2" BackgroundColor="Transparent" StrokeShape="RoundRectangle 5" Padding="0" WidthRequest="36" HeightRequest="28" HorizontalOptions="Center" VerticalOptions="Center">
+                                                            <Grid>
+                                                                <Ellipse Fill="#4198B4" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center" />
+                                                                <Label Text="i" TextColor="White" FontAttributes="Bold" FontSize="14" HorizontalOptions="Center" VerticalOptions="Center" />
+                                                            </Grid>
+                                                        </Border>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </BindableLayout.ItemTemplate>
+                                        </VerticalStackLayout>
+                                    </VerticalStackLayout>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            <CollectionView.EmptyView>
+                <Label Text="Розклад пустий. Додайте групи, дисципліни та викладачів." TextColor="Gray" HorizontalOptions="Center" />
+            </CollectionView.EmptyView>
+        </CollectionView>
+
+    </Grid>
+</ContentPage>

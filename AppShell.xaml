@@ -3,12 +3,30 @@
     x:Class="Lab1MAUI.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:Lab1MAUI"
-    Title="Lab1MAUI">
+    xmlns:views="clr-namespace:Lab1MAUI.Views"
+    Title="Особистий кабінет"
+    FlyoutBehavior="Flyout">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+    <!-- Бічне меню (Flyout) для навігації -->
+    
+    <FlyoutItem Title="Головна (Дашборд)">
+        <ShellContent Route="DashboardPage" ContentTemplate="{DataTemplate views:DashboardPage}" />
+    </FlyoutItem>
+    
+    <FlyoutItem Title="Дисципліни">
+        <ShellContent Route="DisciplinesPage" ContentTemplate="{DataTemplate views:DisciplinesPage}" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Викладачі">
+        <ShellContent Route="TeachersPage" ContentTemplate="{DataTemplate views:TeachersPage}" />
+    </FlyoutItem>
+    
+    <FlyoutItem Title="Студентські групи">
+        <ShellContent Route="StudentGroupsPage" ContentTemplate="{DataTemplate views:StudentGroupsPage}" />
+    </FlyoutItem>
+    
+    <FlyoutItem Title="Налаштування">
+        <ShellContent Route="SettingsPage" ContentTemplate="{DataTemplate views:SettingsPage}" />
+    </FlyoutItem>
 
 </Shell>

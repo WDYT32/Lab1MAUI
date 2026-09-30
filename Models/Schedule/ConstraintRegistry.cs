@@ -17,5 +17,10 @@ public class ConstraintRegistry
         _constraints.Add(p, constraint);
     }
 
+    public void Clear()
+    {
+        _constraints.Clear();
+    }
+
     public List<IConstraint> GetOrdered() => _constraints.Values.ToList();
 }
