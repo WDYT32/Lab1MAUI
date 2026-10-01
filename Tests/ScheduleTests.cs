@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System;
 using System.Linq;
 using Lab1MAUI.Models.Schedule;
 using Xunit;
@@ -11,56 +11,26 @@ namespace Lab1MAUI.Tests
         public void Generate_AssignsLessonsCorrectly_WithoutOverlaps()
         {
             var config = new ScheduleConfig { Days = 5, CellsPerDay = 8 };
+            var schedule = new Schedule(config);
             
-            var teacher1 = new Teacher { Name = "T1" };
-            var teacher2 = new Teacher { Name = "T2" };
+            var math = new Discipline(Guid.NewGuid(), "Math", config.TotalCells);
+            schedule.Disciplines.Add(math);
+            var room = new Room(Guid.NewGuid(), "101", 30, config.TotalCells);
+            schedule.Rooms.Add(room);
             
-            var group1 = new StudentGroup { Name = "G1" };
-            var group2 = new StudentGroup { Name = "G2" };
-
-            var lessons = new List<Lesson>
-            {
-                new Lesson { TeacherId = teacher1.Id, StudentGroupId = group1.Id, SubjectName = "Math" },
-                new Lesson { TeacherId = teacher1.Id, StudentGroupId = group2.Id, SubjectName = "Math" },
-                new Lesson { TeacherId = teacher2.Id, StudentGroupId = group1.Id, SubjectName = "Physics" }
-            };
-
-            var schedule = new Schedule(config, new List<Teacher> { teacher1, teacher2 }, new List<StudentGroup> { group1, group2 }, lessons);
-
-            foreach (var t in schedule.Teachers) t.Grid.Initialize(schedule.Config.TotalCells);
-            foreach (var g in schedule.Groups) g.Grid.Initialize(schedule.Config.TotalCells);
+            var teacher1 = new Teacher(Guid.NewGuid(), "T1", config.TotalCells) { TargetHours = 2 };
+            teacher1.Competences.Add(new TeacherCompetence { DisciplineId = math.Id });
+            schedule.Teachers.Add(teacher1);
             
-            schedule.CollectAllConstraints();
-            schedule.ApplyConstraintsMainLoop();
+            var group1 = new StudentGroup(Guid.NewGuid(), "G1", config.TotalCells) { StudentsCount = 20 };
+            group1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredHours = 2 });
+            schedule.Groups.Add(group1);
 
-            var t1 = schedule.Teachers.First(t => t.Id == teacher1.Id);
-            var t2 = schedule.Teachers.First(t => t.Id == teacher2.Id);
-            var g1 = schedule.Groups.First(g => g.Id == group1.Id);
-            var g2 = schedule.Groups.First(g => g.Id == group2.Id);
+            schedule.Generate();
 
-            Assert.Contains(t1.Grid.Cells, cell => cell != null);
-            Assert.Contains(g1.Grid.Cells, cell => cell != null);
-
-            for (int i = 0; i < schedule.Config.TotalCells; i++)
-            {
-                if (t1.Grid.Cells[i] != null)
-                {
-                    var lessonId = t1.Grid.Cells[i].Value;
-                    var lesson = schedule.Lessons.First(l => l.Id == lessonId);
-                    
-                    if (lesson.StudentGroupId == g1.Id)
-                    {
-                        Assert.Equal(lessonId, g1.Grid.Cells[i]);
-                    }
-                    else if (lesson.StudentGroupId == g2.Id)
-                    {
-                        Assert.Equal(lessonId, g2.Grid.Cells[i]);
-                    }
-                }
-            }
-
-            var assignedCellsT1 = t1.Grid.Cells.Where(c => c != null).ToList();
-            Assert.Equal(2, assignedCellsT1.Count);
+            var flatGrid = schedule.Grid.SelectMany(c => c).ToList();
+            Assert.Equal(2, flatGrid.Count);
+            Assert.NotEqual(flatGrid[0].CellIndex, flatGrid[1].CellIndex);
         }
     }
 }

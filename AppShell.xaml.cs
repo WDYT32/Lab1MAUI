@@ -1,19 +1,18 @@
-using Microsoft.Maui.Controls;
 using Lab1MAUI.Views;
+using Microsoft.Maui.Controls;
 
-namespace Lab1MAUI;
-
-public partial class AppShell : Shell
+namespace Lab1MAUI
 {
-    public AppShell()
+    public partial class AppShell : Shell
     {
-        InitializeComponent();
-        
-        // Реєструємо маршрут до сторінки результатів, оскільки ми переходимо на неї програмно (з коду ViewModel),
-        // а не вибираємо з бічного меню.
-        Routing.RegisterRoute("ScheduleResultPage", typeof(ScheduleResultPage));
-        Routing.RegisterRoute("TeacherEditPage", typeof(TeacherEditPage));
-        Routing.RegisterRoute("GroupEditPage", typeof(GroupEditPage));
-        Routing.RegisterRoute("DisciplineEditPage", typeof(DisciplineEditPage));
+        public AppShell()
+        {
+            InitializeComponent();
+            Routing.RegisterRoute(nameof(TeacherEditPage), typeof(TeacherEditPage));
+            Routing.RegisterRoute(nameof(GroupEditPage), typeof(GroupEditPage));
+            Routing.RegisterRoute(nameof(DisciplineEditPage), typeof(DisciplineEditPage));
+            Routing.RegisterRoute(nameof(ScheduleResultPage), typeof(ScheduleResultPage));
+            Routing.RegisterRoute(nameof(RoomEditPage), typeof(RoomEditPage));
+        }
     }
 }

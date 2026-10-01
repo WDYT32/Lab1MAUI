@@ -17,6 +17,10 @@
         <ShellContent Route="DisciplinesPage" ContentTemplate="{DataTemplate views:DisciplinesPage}" />
     </FlyoutItem>
 
+    <FlyoutItem Title="Аудиторії">
+        <ShellContent Route="RoomsPage" ContentTemplate="{DataTemplate views:RoomsPage}" />
+    </FlyoutItem>
+
     <FlyoutItem Title="Викладачі">
         <ShellContent Route="TeachersPage" ContentTemplate="{DataTemplate views:TeachersPage}" />
     </FlyoutItem>
