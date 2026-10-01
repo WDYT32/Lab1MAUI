@@ -1,6 +1,9 @@
+using Lab1MAUI.Models.Schedule.Constraints;
 using System;
 using System.Linq;
 using Lab1MAUI.Models.Schedule;
+using Lab1MAUI.Models.Schedule.Participants;
+using Lab1MAUI.Models.Schedule.Constraints;
 using Xunit;
 
 namespace Lab1MAUI.Tests

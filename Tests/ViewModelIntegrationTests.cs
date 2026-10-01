@@ -1,6 +1,9 @@
+using Lab1MAUI.Models.Schedule.Constraints;
 using System;
 using System.Linq;
 using Lab1MAUI.Models.Schedule;
+using Lab1MAUI.Models.Schedule.Participants;
+using Lab1MAUI.Models.Schedule.Constraints;
 using Lab1MAUI.ViewModels;
 using Xunit;
 

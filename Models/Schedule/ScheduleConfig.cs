@@ -1,3 +1,4 @@
+using Lab1MAUI.Models.Schedule.Participants;
 namespace Lab1MAUI.Models.Schedule
 {
     public class ScheduleConfig

@@ -1,6 +1,7 @@
+using Lab1MAUI.Models.Schedule.Participants;
 using System;
 
-namespace Lab1MAUI.Models.Schedule
+namespace Lab1MAUI.Models.Schedule.Constraints
 {
     public class DailyLimitConstraint : IConstraint
     {

@@ -1,22 +1,26 @@
+using Lab1MAUI.Models.Schedule.Constraints;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Lab1MAUI.Models.Schedule
+namespace Lab1MAUI.Models.Schedule.Participants
 {
-    public class StudentGroup : IParticipant
+    public class Teacher : IParticipant
     {
         public Guid Id { get; }
         public string Name { get; set; }
-        public int StudentsCount { get; set; }
-
-        public List<GroupRequirement> Requirements { get; } = new();
-        public List<IConstraint> Constraints { get; } = new();
+        public int TargetHours { get; set; }
         
+        private int _assignedHours;
+        public int AssignedHours => _assignedHours;
+
+        public List<TeacherCompetence> Competences { get; } = new();
+        public List<IConstraint> Constraints { get; } = new();
+
         private readonly int _totalCells;
         private readonly bool[] _bookedCells;
 
-        public StudentGroup(Guid id, string name, int totalCells)
+        public Teacher(Guid id, string name, int totalCells)
         {
             Id = id;
             Name = name;
@@ -50,21 +54,28 @@ namespace Lab1MAUI.Models.Schedule
             return _bookedCells[cellIndex];
         }
 
+        public bool CanTakeMoreHours()
+        {
+            return _assignedHours < TargetHours;
+        }
+
+        public bool CanTeach(Discipline disc)
+        {
+            return Competences.Any(c => c.DisciplineId == disc.Id);
+        }
+
         public void BookSlot(int cellIndex)
         {
             if (_bookedCells[cellIndex])
-                throw new InvalidOperationException($"Slot {cellIndex} is already booked for group {Name}");
+                throw new InvalidOperationException($"Slot {cellIndex} is already booked for teacher {Name}");
             _bookedCells[cellIndex] = true;
+            _assignedHours++;
         }
 
         public void ReleaseSlot(int cellIndex)
         {
             _bookedCells[cellIndex] = false;
-        }
-
-        public List<GroupRequirement> GetUnfulfilledRequirements()
-        {
-            return Requirements.Where(r => !r.IsFulfilled()).ToList();
+            _assignedHours--;
         }
     }
 }

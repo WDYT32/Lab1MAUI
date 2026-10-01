@@ -1,3 +1,4 @@
+using Lab1MAUI.Models.Schedule.Participants;
 using System;
 
 namespace Lab1MAUI.Models.Schedule

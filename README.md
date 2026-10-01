@@ -57,15 +57,12 @@ classDiagram
     %% --- УЧАСНИКИ ТА ЇХ СТАН ---
     class IParticipant {
         <<interface>>
-        +Guid Id
-        +string Name
         +GetAvailabilityMask() bool[]
         +IsBooked(int cellIndex) bool
     }
 
     class StudentGroup {
-        +int StudentsCount
-        +List~GroupRequirement~ Requirements
+        +StudentGroupMTM Info
         +List~IConstraint~ Constraints
         +GetUnfulfilledRequirements() List~GroupRequirement~
         +BookSlot(int cellIndex) void
@@ -73,9 +70,8 @@ classDiagram
     }
 
     class Teacher {
-        +int TargetHours
+        +TeacherMTM Info
         +int AssignedHours
-        +List~TeacherCompetence~ Competences
         +List~IConstraint~ Constraints
         +CanTakeMoreHours() bool
         +CanTeach(Discipline disc) bool
@@ -84,11 +80,12 @@ classDiagram
     }
 
     class Discipline {
+        +DisciplineMTM Info
         +List~IConstraint~ Constraints
     }
 
     class Room {
-        +int Capacity
+        +RoomMTM Info
         -int[] _reservedSeatsPerSlot
         -int _currentRequestStudents
         +SetContext(int studentsCount) void
@@ -98,14 +95,13 @@ classDiagram
     }
 
     class GroupRequirement {
-        +Guid DisciplineId
-        +int RequiredHours
+        +GroupRequirementMTM Info
         +int FulfilledHours
         +bool IsFulfilled()
     }
 
     class TeacherCompetence {
-        +Guid DisciplineId
+        +TeacherCompetenceMTM Info
     }
 
     %% --- ОБМЕЖЕННЯ ---
@@ -116,28 +112,34 @@ classDiagram
 
     class DailyLimitConstraint {
         -IParticipant _owner
+        +DailyLimitConstraintMTM Info
         -int _maxLessonsPerDay
-        -int _cellsPerDay
+        +DailyLimitConstraint(IParticipant owner, int maxLessonsPerDay)
     }
 
     class TimeOffConstraint {
+        +TimeOffConstraintMTM Info
         -int[] _unavailableCells
+        +TimeOffConstraint(int[] unavailableCells)
     }
 
     class MaxConsecutiveLessonsConstraint {
         -IParticipant _owner
+        +MaxConsecutiveLessonsConstraintMTM Info
         -int _maxConsecutive
-        -int _cellsPerDay
+        +MaxConsecutiveLessonsConstraint(IParticipant owner, int maxConsecutive)
     }
 
     class SpecificDayConstraint {
+        +SpecificDayConstraintMTM Info
         -int[] _allowedDays
-        -int _cellsPerDay
+        +SpecificDayConstraint(int[] allowedDays)
     }
 
     class SpecificTimeConstraint {
+        +SpecificTimeConstraintMTM Info
         -int[] _allowedCellsInDay
-        -int _cellsPerDay
+        +SpecificTimeConstraint(int[] allowedCellsInDay)
     }
 
     %% --- ВІДНОШЕННЯ ТА ВИКОРИСТАННЯ (Залежності) ---
@@ -168,6 +170,116 @@ classDiagram
     IConstraint <|.. MaxConsecutiveLessonsConstraint
     IConstraint <|.. SpecificDayConstraint
     IConstraint <|.. SpecificTimeConstraint
+
+    DailyLimitConstraint o-- IParticipant : використовує як _owner
+    MaxConsecutiveLessonsConstraint o-- IParticipant : використовує як _owner
+
+```
+
+### UML Діаграма (Ієрархія MTM / DTO)
+
+```mermaid
+%%{init: {'useMaxWidth': false}}%%
+classDiagram
+    direction LR
+
+    %% --- ПАРАЛЕЛЬНА ІЄРАРХІЯ MTM ---
+    class ScheduleMTM {
+        +ScheduleConfig Config
+        +ObservableCollection~TeacherMTM~ Teachers
+        +ObservableCollection~StudentGroupMTM~ Groups
+        +ObservableCollection~RoomMTM~ Rooms
+        +ObservableCollection~DisciplineMTM~ Disciplines
+        +MapToModel() Schedule
+    }
+
+    class TeacherMTM {
+        +Guid Id
+        +string Name
+        +int TargetHours
+        +List~TeacherCompetenceMTM~ Competences
+        +ObservableCollection~ConstraintMTM~ Constraints
+        +MapToModel(ScheduleConfig config) Teacher
+    }
+    class StudentGroupMTM {
+        +Guid Id
+        +string Name
+        +int StudentsCount
+        +List~GroupRequirementMTM~ Requirements
+        +ObservableCollection~ConstraintMTM~ Constraints
+        +MapToModel(ScheduleConfig config) StudentGroup
+    }
+    class RoomMTM {
+        +Guid Id
+        +string Name
+        +int Capacity
+        +MapToModel(ScheduleConfig config) Room
+    }
+    class DisciplineMTM {
+        +Guid Id
+        +string Name
+        +ObservableCollection~ConstraintMTM~ Constraints
+        +MapToModel(ScheduleConfig config) Discipline
+    }
+    class ConstraintMTM {
+        <<abstract>>
+        +int CellsPerDay
+        +MapToModel(object owner, ScheduleConfig config) IConstraint
+    }
+    class DailyLimitConstraintMTM {
+        +int MaxLessonsPerDay
+        +MapToModel(object owner, ScheduleConfig config) IConstraint
+    }
+    class TimeOffConstraintMTM {
+        +int[] UnavailableCells
+        +MapToModel(object owner, ScheduleConfig config) IConstraint
+    }
+    class MaxConsecutiveLessonsConstraintMTM {
+        +int MaxConsecutive
+        +MapToModel(object owner, ScheduleConfig config) IConstraint
+    }
+    class SpecificDayConstraintMTM {
+        +int[] AllowedDays
+        +MapToModel(object owner, ScheduleConfig config) IConstraint
+    }
+    class SpecificTimeConstraintMTM {
+        +int[] AllowedCellsInDay
+        +MapToModel(object owner, ScheduleConfig config) IConstraint
+    }
+
+    class GroupRequirementMTM {
+        +Guid DisciplineId
+        +int RequiredHours
+        +MapToModel() GroupRequirement
+    }
+    class TeacherCompetenceMTM {
+        +Guid DisciplineId
+        +MapToModel() TeacherCompetence
+    }
+    ScheduleMTM ..> Schedule : MapToModel() розгортає
+    ScheduleMTM *-- TeacherMTM
+    ScheduleMTM *-- StudentGroupMTM
+    ScheduleMTM *-- RoomMTM
+    ScheduleMTM *-- DisciplineMTM
+    TeacherMTM *-- ConstraintMTM
+    StudentGroupMTM *-- ConstraintMTM
+    DisciplineMTM *-- ConstraintMTM
+    StudentGroupMTM *-- GroupRequirementMTM
+    TeacherMTM *-- TeacherCompetenceMTM
+    GroupRequirementMTM ..> GroupRequirement : MapToModel() створює
+    TeacherCompetenceMTM ..> TeacherCompetence : MapToModel() створює
+    ConstraintMTM <|-- DailyLimitConstraintMTM
+    ConstraintMTM <|-- TimeOffConstraintMTM
+    ConstraintMTM <|-- MaxConsecutiveLessonsConstraintMTM
+    ConstraintMTM <|-- SpecificDayConstraintMTM
+    ConstraintMTM <|-- SpecificTimeConstraintMTM
+
+    TeacherMTM ..> Teacher : MapToModel() створює
+    StudentGroupMTM ..> StudentGroup : MapToModel() створює
+    RoomMTM ..> Room : MapToModel() створює
+    DisciplineMTM ..> Discipline : MapToModel() створює
+    ConstraintMTM ..> IConstraint : MapToModel() створює
+
 ```
 
 ### Алгоритм Генерації (Backtracking)
@@ -287,9 +399,11 @@ flowchart TD
 
 ## Архітектура ViewModels (MVVM)
 
-Тут наведено структуру класів ViewModel, яка відповідає всім вимогам лабораторної роботи (використання `INotifyPropertyChanged`, `ObservableCollection`, `ICommand` та `Data Binding`).
+У цій версії архітектури **ViewModels працюють виключно з MTM (MapToModel)**, діючи як "губка", що накопичує налаштування користувача. 
+Класи доменної моделі (`Teacher`, `Schedule` тощо) не існують у пам'яті постійно. Вони конструюються динамічно з цих MTM **лише в момент натискання кнопки Генерації**, отримуючи актуальні розміри сітки, після чого відпрацьовують алгоритм і знищуються.
 
 ```mermaid
+%%{init: {'useMaxWidth': false}}%%
 classDiagram
     direction LR
     
@@ -321,7 +435,7 @@ classDiagram
     }
     
     class DisciplinesViewModel {
-        +Collection~Discipline~ Disciplines
+        +Collection~DisciplineMTM~ Disciplines
         +ICommand AddDisciplineCommand
         +ICommand EditDisciplineCommand
         +ICommand DeleteDisciplineCommand
@@ -331,20 +445,16 @@ classDiagram
     
     class DisciplineEditViewModel {
         +string Name
-        +Collection~IConstraint~ Constraints
+        +Collection~ConstraintMTM~ Constraints
         +ICommand SaveCommand
         +ICommand DeleteConstraintCommand
-        +ICommand DragStartingConstraintCommand
-        +ICommand DropConstraintCommand
     }
 
     class RoomsViewModel {
-        +Collection~Room~ Rooms
+        +Collection~RoomMTM~ Rooms
         +ICommand AddRoomCommand
         +ICommand EditRoomCommand
         +ICommand DeleteRoomCommand
-        +ICommand DragStartingCommand
-        +ICommand DropCommand
     }
     
     class RoomEditViewModel {
@@ -354,49 +464,40 @@ classDiagram
     }
 
     class TeachersViewModel {
-        +Collection~Teacher~ Teachers
+        +Collection~TeacherMTM~ Teachers
         +ICommand AddTeacherCommand
         +ICommand EditTeacherCommand
         +ICommand DeleteTeacherCommand
-        +ICommand DragStartingCommand
-        +ICommand DropCommand
     }
     
     class TeacherEditViewModel {
         +string FirstName
         +string LastName
-        +string Patronymic
         +int TargetHours
-        +Collection~TeacherCompetenceItem~ Competences
-        +Collection~IConstraint~ Constraints
+        +Collection~TeacherCompetenceMTM~ Competences
+        +Collection~ConstraintMTM~ Constraints
         +ICommand SaveCommand
         +ICommand AddCompetenceCommand
         +ICommand DeleteCompetenceCommand
         +ICommand DeleteConstraintCommand
-        +ICommand DragStartingConstraintCommand
-        +ICommand DropConstraintCommand
     }
 
     class StudentGroupsViewModel {
-        +Collection~StudentGroup~ Groups
+        +Collection~StudentGroupMTM~ Groups
         +ICommand AddGroupCommand
         +ICommand EditGroupCommand
         +ICommand DeleteGroupCommand
-        +ICommand DragStartingCommand
-        +ICommand DropCommand
     }
     
     class GroupEditViewModel {
         +string GroupName
         +int StudentsCount
-        +Collection~GroupRequirementItem~ Requirements
-        +Collection~IConstraint~ Constraints
+        +Collection~GroupRequirementMTM~ Requirements
+        +Collection~ConstraintMTM~ Constraints
         +ICommand SaveCommand
         +ICommand AddRequirementCommand
         +ICommand DeleteRequirementCommand
         +ICommand DeleteConstraintCommand
-        +ICommand DragStartingConstraintCommand
-        +ICommand DropConstraintCommand
     }
 
     class ConstraintFormViewModel {
@@ -405,23 +506,12 @@ classDiagram
         +int DailyLimitValue
         +int MaxConsecutiveValue
         +int TimeOffCellIndex
-        +Collection~Teacher~ AvailableTeachers
-        +Teacher SelectedAssignmentTeacher
         +ICommand AddConstraintCommand
-    }
-
-    class DisciplineSelectionViewModel {
-        +Collection~Discipline~ FilteredDisciplines
-        +string SearchQuery
-        +Discipline SelectedDiscipline
-        +ICommand SelectCommand
-        +ICommand CancelCommand
     }
 
     class ScheduleResultViewModel {
         +Collection~UnassignedDisplay~ UnassignedLessons
         +Collection~GroupScheduleDisplay~ GroupSchedules
-        +bool HasUnassignedLessons
     }
 
     %% Наслідування від BaseViewModel
@@ -438,14 +528,10 @@ classDiagram
     BaseViewModel <|-- GroupEditViewModel
     BaseViewModel <|-- ScheduleResultViewModel
     BaseViewModel <|-- ConstraintFormViewModel
-    BaseViewModel <|-- DisciplineSelectionViewModel
-
-    %% Композиція та використання компонентів (дочірні ViewModels)
-    DisciplineEditViewModel *-- ConstraintFormViewModel : використовує
     
-    TeacherEditViewModel *-- ConstraintFormViewModel : використовує
-    TeacherEditViewModel *-- DisciplineSelectionViewModel : використовує
-    
-    GroupEditViewModel *-- ConstraintFormViewModel : використовує
-    GroupEditViewModel *-- DisciplineSelectionViewModel : використовує
+    %% Композиція (дочірні ViewModels)
+    DisciplineEditViewModel *-- ConstraintFormViewModel
+    TeacherEditViewModel *-- ConstraintFormViewModel
+    GroupEditViewModel *-- ConstraintFormViewModel
 ```
+
