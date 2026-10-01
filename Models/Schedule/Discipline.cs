@@ -6,7 +6,7 @@ namespace Lab1MAUI.Models.Schedule
     public class Discipline : IParticipant
     {
         public Guid Id { get; }
-        public string Name { get; }
+        public string Name { get; set; }
 
         public List<IConstraint> Constraints { get; } = new();
 

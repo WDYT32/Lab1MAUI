@@ -40,7 +40,6 @@ namespace Lab1MAUI.ViewModels
             {
                 ConstraintTypes.Add("Ліміт занять на день (DailyLimit)");
                 ConstraintTypes.Add("Підрядні уроки (MaxConsecutive)");
-                ConstraintTypes.Add("Призначення викладача (Assignment)");
             }
             else if (ownerType == ConstraintOwnerType.Discipline)
             {
@@ -52,33 +51,25 @@ namespace Lab1MAUI.ViewModels
                 if (string.IsNullOrEmpty(SelectedConstraintType)) return;
 
                 IConstraint newConstraint = null;
-                Guid ownerId = _owner is Teacher t ? t.Id : 
-                               (_owner is StudentGroup g ? g.Id : 
-                               (_owner is Discipline d ? d.Id : Guid.Empty));
+                var participantOwner = _owner as IParticipant;
 
-                if (IsDailyLimitSelected)
+                if (IsDailyLimitSelected && participantOwner != null)
                 {
-                    if (_ownerType == ConstraintOwnerType.Discipline)
-                        newConstraint = new DisciplineDailyLimitConstraint(ownerId, DailyLimitValue);
-                    else
-                        newConstraint = new DailyLimitConstraint(ownerId, DailyLimitValue);
+                    newConstraint = new DailyLimitConstraint(participantOwner, DailyLimitValue, _schedule.Config.CellsPerDay);
                 }
-                else if (IsMaxConsecutiveSelected)
-                    newConstraint = new MaxConsecutiveLessonsConstraint(ownerId, MaxConsecutiveValue);
-                else if (IsTimeOffSelected && _owner is Teacher teacher)
+                else if (IsMaxConsecutiveSelected && participantOwner != null)
                 {
-                    newConstraint = new TeacherTimeOffConstraint(teacher, TimeOffCellIndex);
+                    newConstraint = new MaxConsecutiveLessonsConstraint(participantOwner, MaxConsecutiveValue, _schedule.Config.CellsPerDay);
                 }
-                else if (IsAssignmentSelected && _owner is StudentGroup group)
+                else if (IsTimeOffSelected)
                 {
-                    Guid? teacherId = SelectedAssignmentTeacher?.Id;
-                    newConstraint = new TeacherAssignmentConstraint(group, teacherId);
+                    newConstraint = new TimeOffConstraint(new[] { TimeOffCellIndex });
                 }
                 
                 if (newConstraint != null)
                 {
                     OnConstraintAdded?.Invoke(newConstraint);
-                    SelectedConstraintType = null; // Ховаємо підформу після додавання
+                    SelectedConstraintType = null;
                 }
             });
         }

@@ -7,7 +7,7 @@ namespace Lab1MAUI.Models.Schedule
     public class Teacher : IParticipant
     {
         public Guid Id { get; }
-        public string Name { get; }
+        public string Name { get; set; }
         public int TargetHours { get; set; }
         
         private int _assignedHours;

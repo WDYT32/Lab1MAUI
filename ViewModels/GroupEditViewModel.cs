@@ -21,13 +21,13 @@ namespace Lab1MAUI.ViewModels
                 if (value == "new")
                 {
                     _isNew = true;
-                    _group = new StudentGroup();
+                    _group = new StudentGroup(Guid.NewGuid(), "", _schedule.Config.TotalCells);
                     LoadData();
                 }
                 else if (Guid.TryParse(value, out Guid id))
                 {
                     _isNew = false;
-                    _group = _schedule.Groups.FirstOrDefault(g => g.Id == id) ?? new StudentGroup();
+                    _group = _schedule.Groups.FirstOrDefault(g => g.Id == id) ?? new StudentGroup(Guid.NewGuid(), "", _schedule.Config.TotalCells);
                     LoadData();
                 }
             }
@@ -40,11 +40,11 @@ namespace Lab1MAUI.ViewModels
             set => SetProperty(ref _groupName, value);
         }
 
-        private int _targetHours;
-        public int TargetHours
+        private int _studentsCount;
+        public int StudentsCount
         {
-            get => _targetHours;
-            set => SetProperty(ref _targetHours, value);
+            get => _studentsCount;
+            set => SetProperty(ref _studentsCount, value);
         }
 
         public ConstraintFormViewModel ConstraintForm { get; private set; }
@@ -77,7 +77,7 @@ namespace Lab1MAUI.ViewModels
                 }
             };
 
-            ConstraintForm = new ConstraintFormViewModel(ConstraintOwnerType.Group, new StudentGroup(), _schedule);
+            ConstraintForm = new ConstraintFormViewModel(ConstraintOwnerType.Group, new StudentGroup(Guid.Empty, "", schedule.Config.TotalCells), _schedule);
 
             SaveCommand = new Command(async () => 
             {
@@ -93,11 +93,10 @@ namespace Lab1MAUI.ViewModels
                 }
 
                 _group.Name = GroupName;
+                _group.StudentsCount = StudentsCount;
                 
                 _group.Requirements.Clear();
                 foreach (var r in Requirements) _group.Requirements.Add(r.Model);
-                
-                _group.Grid.TargetHours = _group.Requirements.Sum(r => r.RequiredHours);
                 
                 _group.Constraints.Clear();
                 foreach (var c in Constraints) _group.Constraints.Add(c);

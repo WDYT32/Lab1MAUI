@@ -7,7 +7,7 @@ namespace Lab1MAUI.Models.Schedule
     public class StudentGroup : IParticipant
     {
         public Guid Id { get; }
-        public string Name { get; }
+        public string Name { get; set; }
         public int StudentsCount { get; set; }
 
         public List<GroupRequirement> Requirements { get; } = new();

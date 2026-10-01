@@ -21,13 +21,13 @@ namespace Lab1MAUI.ViewModels
                 if (value == "new")
                 {
                     _isNew = true;
-                    _teacher = new Teacher();
+                    _teacher = new Teacher(Guid.NewGuid(), "", _schedule.Config.TotalCells);
                     LoadData();
                 }
                 else if (Guid.TryParse(value, out Guid id))
                 {
                     _isNew = false;
-                    _teacher = _schedule.Teachers.FirstOrDefault(t => t.Id == id) ?? new Teacher();
+                    _teacher = _schedule.Teachers.FirstOrDefault(t => t.Id == id) ?? new Teacher(Guid.NewGuid(), "", _schedule.Config.TotalCells);
                     LoadData();
                 }
             }
@@ -91,7 +91,7 @@ namespace Lab1MAUI.ViewModels
                 }
             };
             
-            ConstraintForm = new ConstraintFormViewModel(ConstraintOwnerType.Teacher, new Teacher(), _schedule);
+            ConstraintForm = new ConstraintFormViewModel(ConstraintOwnerType.Teacher, new Teacher(Guid.Empty, "", schedule.Config.TotalCells), _schedule);
 
             SaveCommand = new Command(async () => 
             {
@@ -105,10 +105,8 @@ namespace Lab1MAUI.ViewModels
                     return;
                 }
 
-                _teacher.FirstName = FirstName;
-                _teacher.LastName = LastName;
-                _teacher.Patronymic = Patronymic;
-                _teacher.Grid.TargetHours = TargetHours;
+                _teacher.Name = $"{LastName} {FirstName} {Patronymic}".Trim();
+                _teacher.TargetHours = TargetHours;
                 
                 _teacher.Competences.Clear();
                 foreach (var c in Competences) _teacher.Competences.Add(c.Model);
@@ -148,10 +146,12 @@ namespace Lab1MAUI.ViewModels
 
         private void LoadData()
         {
-            FirstName = _teacher.FirstName;
-            LastName = _teacher.LastName;
-            Patronymic = _teacher.Patronymic;
-            TargetHours = _teacher.Grid.TargetHours;
+            var parts = _teacher.Name?.Split(' ', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+            LastName = parts.Length > 0 ? parts[0] : "";
+            FirstName = parts.Length > 1 ? parts[1] : "";
+            Patronymic = parts.Length > 2 ? parts[2] : "";
+
+            TargetHours = _teacher.TargetHours;
             
             Competences.Clear();
             foreach (var c in _teacher.Competences) Competences.Add(new TeacherCompetenceItem(c, _schedule));

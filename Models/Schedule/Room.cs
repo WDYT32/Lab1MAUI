@@ -6,7 +6,7 @@ namespace Lab1MAUI.Models.Schedule
     public class Room : IParticipant
     {
         public Guid Id { get; }
-        public string Name { get; }
+        public string Name { get; set; }
         public int Capacity { get; set; }
         
         private readonly int[] _reservedSeatsPerSlot;

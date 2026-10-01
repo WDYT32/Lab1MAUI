@@ -23,13 +23,14 @@ public class ScheduleResultViewModel : BaseViewModel
         UnassignedLessons.Clear();
         
         // Знаходимо уроки без викладача (наш Edge Case)
-        var unassigned = _schedule.Lessons.Where(l => l.TeacherId == System.Guid.Empty).ToList();
+        var allLessons = _schedule.Grid.SelectMany(cell => cell).ToList();
+        var unassigned = allLessons.Where(l => l.TeacherId == System.Guid.Empty).ToList();
         
         var grouped = unassigned
             .GroupBy(l => new { l.DisciplineId, l.StudentGroupId })
             .Select(g => new UnassignedDisplay
             {
-                SubjectName = g.First().SubjectName,
+                SubjectName = _schedule.Disciplines.FirstOrDefault(d => d.Id == g.Key.DisciplineId)?.Name ?? "Невідомо",
                 GroupName = _schedule.Groups.FirstOrDefault(gr => gr.Id == g.Key.StudentGroupId)?.Name ?? "Невідома група",
                 Hours = g.Count(),
                 TotalMinutes = g.Count() * _schedule.Config.LessonDurationMinutes
@@ -41,16 +42,16 @@ public class ScheduleResultViewModel : BaseViewModel
         }
         OnPropertyChanged(nameof(HasUnassignedLessons));
         
-        LoadGroupSchedules();
+        LoadGroupSchedules(allLessons);
     }
 
     public ObservableCollection<GroupScheduleDisplay> GroupSchedules { get; } = new();
 
-    private void LoadGroupSchedules()
+    private void LoadGroupSchedules(List<Lesson> allLessons)
     {
         GroupSchedules.Clear();
         
-        var validLessons = _schedule.Lessons.Where(l => l.TeacherId != System.Guid.Empty).ToList();
+        var validLessons = allLessons.Where(l => l.TeacherId != System.Guid.Empty).ToList();
         
         foreach (var group in _schedule.Groups)
         {
@@ -59,12 +60,10 @@ public class ScheduleResultViewModel : BaseViewModel
             
             var lessonsByDay = groupLessons
                 .Select(l => {
-                    var cellIndex = group.Grid.Cells.ToList().IndexOf(l.Id);
-                    int day = cellIndex != -1 ? cellIndex / _schedule.Config.CellsPerDay : -1;
-                    int timeSlot = cellIndex != -1 ? cellIndex % _schedule.Config.CellsPerDay : -1;
+                    int day = l.CellIndex / _schedule.Config.CellsPerDay;
+                    int timeSlot = l.CellIndex % _schedule.Config.CellsPerDay;
                     return new { Lesson = l, Day = day, TimeSlot = timeSlot };
                 })
-                .Where(x => x.Day != -1)
                 .GroupBy(x => x.Day)
                 .OrderBy(g => g.Key);
             
@@ -83,12 +82,15 @@ public class ScheduleResultViewModel : BaseViewModel
                 foreach (var item in dayGroup.OrderBy(x => x.TimeSlot))
                 {
                     var teacher = _schedule.Teachers.FirstOrDefault(t => t.Id == item.Lesson.TeacherId);
+                    var discipline = _schedule.Disciplines.FirstOrDefault(d => d.Id == item.Lesson.DisciplineId);
+                    var room = _schedule.Rooms.FirstOrDefault(r => r.Id == item.Lesson.RoomId);
+                    
                     dayDisplay.Lessons.Add(new LessonDisplay
                     {
                         TimeSlotName = (item.TimeSlot + 1).ToString(),
-                        SubjectName = item.Lesson.SubjectName,
-                        TeacherName = teacher != null ? $"{teacher.LastName} {teacher.FirstName}" : "Невідомий",
-                        RoomName = "ауд. ON-LINE",
+                        SubjectName = discipline?.Name ?? "Невідомо",
+                        TeacherName = teacher?.Name ?? "Невідомий",
+                        RoomName = room?.Name ?? "ON-LINE",
                         MainColor = mainColor,
                         LightColor = lightColor
                     });

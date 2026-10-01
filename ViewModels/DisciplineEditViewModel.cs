@@ -19,7 +19,7 @@ namespace Lab1MAUI.ViewModels
             {
                 if (value == "new")
                 {
-                    _discipline = new Discipline();
+                    _discipline = new Discipline(Guid.NewGuid(), "", _schedule.Config.TotalCells);
                     Name = "";
                     Constraints.Clear();
                 }
