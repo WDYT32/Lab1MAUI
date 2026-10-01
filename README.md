@@ -30,14 +30,14 @@ classDiagram
 
     class Schedule {
         +ScheduleConfig Config
-        -[getter] _grid: IReadOnlyList~IReadOnlyList~Lesson~~
-        -[getter] _teachers: List~Teacher~
-        -[getter] _groups: List~StudentGroup~
-        -[getter] _disciplines: List~Discipline~
-        -[getter] _rooms: List~Room~
+        +IReadOnlyList~IReadOnlyList~Lesson~~ Grid
+        +List~Teacher~ Teachers
+        +List~StudentGroup~ Groups
+        +List~Discipline~ Disciplines
+        +List~Room~ Rooms
         
         +Generate() void
-        -InitializeMasks() void
+        -GenerateRecursive() bool
         -FilterTeachers(Discipline disc, StudentGroup group) IEnumerable~Teacher~
         -FilterRooms(Discipline disc, StudentGroup group) IEnumerable~Room~
         -FindCommonFreeSlot(IParticipant g, IParticipant t, IParticipant r, IParticipant d) int
@@ -64,9 +64,9 @@ classDiagram
     }
 
     class StudentGroup {
-        +[get, set] StudentsCount: int
-        -[getter] _requirements: List~GroupRequirement~
-        -[getter] _constraints: List~IConstraint~
+        +int StudentsCount
+        +List~GroupRequirement~ Requirements
+        +List~IConstraint~ Constraints
         +GetUnfulfilledRequirements() List~GroupRequirement~
         +BookSlot(int cellIndex) void
         +ReleaseSlot(int cellIndex) void
@@ -74,22 +74,24 @@ classDiagram
 
     class Teacher {
         +int TargetHours
-        -[getter] _assignedHours: int
-        -[getter] _competences: List~TeacherCompetence~
-        -[getter] _constraints: List~IConstraint~
-        +CanTakeMoreHours()
+        +int AssignedHours
+        +List~TeacherCompetence~ Competences
+        +List~IConstraint~ Constraints
+        +CanTakeMoreHours() bool
         +CanTeach(Discipline disc) bool
         +BookSlot(int cellIndex) void
         +ReleaseSlot(int cellIndex) void
     }
 
     class Discipline {
-        -[getter] _constraints: List~IConstraint~
+        +List~IConstraint~ Constraints
     }
 
     class Room {
         +int Capacity
-        -[getter] _reservedSeatsPerSlot: int[]
+        -int[] _reservedSeatsPerSlot
+        -int _currentRequestStudents
+        +SetContext(int studentsCount) void
         +CanAccommodate(int studentsCount, int cellIndex) bool
         +ReserveSeats(int studentsCount, int cellIndex) void
         +FreeSeats(int studentsCount, int cellIndex) void

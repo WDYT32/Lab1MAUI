@@ -88,7 +88,12 @@ namespace Lab1MAUI.Models.Schedule
 
         private IEnumerable<Room> FilterRooms(Discipline disc, StudentGroup group)
         {
-            return Rooms.Where(r => r.Capacity >= group.StudentsCount);
+            return Rooms.Where(r => 
+            {
+                bool fits = r.Capacity >= group.StudentsCount;
+                if (fits) r.SetContext(group.StudentsCount);
+                return fits;
+            });
         }
 
         private int FindCommonFreeSlot(IParticipant g, IParticipant t, IParticipant r, IParticipant d)

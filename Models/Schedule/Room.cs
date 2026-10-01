@@ -21,18 +21,26 @@ namespace Lab1MAUI.Models.Schedule
             _reservedSeatsPerSlot = new int[totalCells];
         }
 
+        private int _currentRequestStudents;
+
+        public void SetContext(int studentsCount)
+        {
+            _currentRequestStudents = studentsCount;
+        }
+
         public bool[] GetAvailabilityMask()
         {
             bool[] mask = new bool[_totalCells];
-            Array.Fill(mask, true);
-            // Availability mask means the room is not physically unavailable (e.g. cleaning, closed).
-            // Capacity constraint is checked dynamically via CanAccommodate during schedule generation.
+            for (int i = 0; i < _totalCells; i++)
+            {
+                mask[i] = CanAccommodate(_currentRequestStudents, i);
+            }
             return mask;
         }
 
         public bool IsBooked(int cellIndex)
         {
-            return _reservedSeatsPerSlot[cellIndex] >= Capacity;
+            return _reservedSeatsPerSlot[cellIndex] > 0;
         }
 
         public bool CanAccommodate(int studentsCount, int cellIndex)
