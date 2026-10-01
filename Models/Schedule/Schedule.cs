@@ -1,188 +1,157 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 
-namespace Lab1MAUI.Models.Schedule;
-
-public class Schedule
+namespace Lab1MAUI.Models.Schedule
 {
-    public ScheduleConfig Config { get; set; } = new();
-    public List<Teacher> Teachers { get; set; } = new();
-    public List<StudentGroup> Groups { get; set; } = new();
-    public List<Lesson> Lessons { get; set; } = new();
-    public List<Discipline> Disciplines { get; set; } = new();
-    public ConstraintRegistry Registry { get; set; } = new();
-
-    public Schedule() { }
-
-    public Schedule(ScheduleConfig config, List<Teacher> teachers, List<StudentGroup> groups, List<Lesson> lessons)
+    public class Schedule
     {
-        Config = config;
-        Teachers = teachers;
-        Groups = groups;
-        Lessons = lessons;
-    }
+        public ScheduleConfig Config { get; }
+        
+        private readonly List<Lesson>[] _grid;
+        public IReadOnlyList<IReadOnlyList<Lesson>> Grid => _grid;
 
-    public void Generate()
-    {
-        InitializeData();
-        CollectAllConstraints();
-        ApplyConstraintsMainLoop();
-    }
+        public List<Teacher> Teachers { get; } = new();
+        public List<StudentGroup> Groups { get; } = new();
+        public List<Discipline> Disciplines { get; } = new();
+        public List<Room> Rooms { get; } = new();
 
-    public void InitializeData()
-    {
-        Lessons.Clear();
-        int total = Config.TotalCells;
-        var rnd = new Random();
-
-        foreach (var t in Teachers)
+        public Schedule(ScheduleConfig config)
         {
-            if (t.Grid.TargetHours == 0) t.Grid.TargetHours = rnd.Next(10, 20);
-            t.Grid.Initialize(total);
-        }
-
-        foreach (var g in Groups)
-        {
-            if (g.Grid.TargetHours == 0) g.Grid.TargetHours = rnd.Next(15, 25);
-            g.Grid.Initialize(total);
-        }
-
-        SpawnLessons();
-    }
-
-    private void SpawnLessons()
-    {
-        foreach (var group in Groups)
-        {
-            foreach (var req in group.Requirements)
+            Config = config;
+            _grid = new List<Lesson>[config.TotalCells];
+            for (int i = 0; i < config.TotalCells; i++)
             {
-                var disciplineName = Disciplines.FirstOrDefault(d => d.Id == req.DisciplineId)?.Name ?? "Generated";
-                
-                for (int i = 0; i < req.RequiredHours; i++)
+                _grid[i] = new List<Lesson>();
+            }
+        }
+
+        public void Generate()
+        {
+            if (!GenerateRecursive())
+            {
+                throw new InvalidOperationException("Failed to generate a valid schedule. Constraints are too tight.");
+            }
+        }
+
+        private bool GenerateRecursive()
+        {
+            // Find next group with unfulfilled requirements
+            StudentGroup currentGroup = null;
+            GroupRequirement currentReq = null;
+            
+            foreach (var group in Groups)
+            {
+                var unfulfilled = group.GetUnfulfilledRequirements();
+                if (unfulfilled.Any())
                 {
-                    var lesson = new Lesson
+                    currentGroup = group;
+                    currentReq = unfulfilled.First();
+                    break;
+                }
+            }
+
+            // Base case: all requirements for all groups are fulfilled!
+            if (currentGroup == null) return true;
+
+            var discipline = Disciplines.FirstOrDefault(d => d.Id == currentReq.DisciplineId);
+            if (discipline == null) throw new InvalidOperationException("Discipline not found");
+
+            var eligibleTeachers = FilterTeachers(discipline, currentGroup).ToList();
+            var eligibleRooms = FilterRooms(discipline, currentGroup).ToList();
+
+            foreach (var teacher in eligibleTeachers)
+            {
+                foreach (var room in eligibleRooms)
+                {
+                    int slot = FindCommonFreeSlot(currentGroup, teacher, room, discipline);
+                    if (slot != -1)
                     {
-                        StudentGroupId = group.Id,
-                        TeacherId = Guid.Empty, // Призначення відбувається у TeacherAssignmentConstraint
-                        DisciplineId = req.DisciplineId,
-                        SubjectName = disciplineName
-                    };
-                    
-                    Lessons.Add(lesson);
+                        var lesson = CommitTransaction(currentGroup, teacher, room, discipline, slot);
+                        
+                        // Recursive call
+                        if (GenerateRecursive()) return true;
+                        
+                        // Backtrack if failed
+                        RollbackTransaction(lesson);
+                    }
                 }
             }
-            // НЕ ОЧИЩАЙМО ВИМОГИ ТУТ, ІНАКШЕ ДРУГЕ ГЕНЕРУВАННЯ ПУСТЕ!
-            // group.Requirements.Clear(); 
+
+            return false; // Dead end, need to backtrack from caller
         }
-    }
 
-    public void CollectAllConstraints()
-    {
-        Registry = new ConstraintRegistry();
-        int total = Config.TotalCells;
-
-        // Вчителі: позиція у списку - це множник пріоритету
-        for (int i = 0; i < Teachers.Count; i++)
+        private IEnumerable<Teacher> FilterTeachers(Discipline disc, StudentGroup group)
         {
-            var t = Teachers[i];
-            int entityMultiplier = Teachers.Count - i;
-            
-            var personalConstraints = t.GetPersonalConstraints(total);
-            for (int j = 0; j < personalConstraints.Count; j++)
+            return Teachers.Where(t => t.CanTeach(disc) && t.CanTakeMoreHours());
+        }
+
+        private IEnumerable<Room> FilterRooms(Discipline disc, StudentGroup group)
+        {
+            return Rooms.Where(r => r.Capacity >= group.StudentsCount);
+        }
+
+        private int FindCommonFreeSlot(IParticipant g, IParticipant t, IParticipant r, IParticipant d)
+        {
+            bool[] gMask = g.GetAvailabilityMask();
+            bool[] tMask = t.GetAvailabilityMask();
+            bool[] rMask = r.GetAvailabilityMask();
+            bool[] dMask = d.GetAvailabilityMask();
+
+            for (int i = 0; i < Config.TotalCells; i++)
             {
-                var c = personalConstraints[j];
-                int constraintWeight = personalConstraints.Count - j;
-                
-                c.Priority += entityMultiplier * constraintWeight * 10;
-                Registry.Register(c);
-            }
-        }
-
-        // Групи: позиція у списку - це множник пріоритету
-        for (int i = 0; i < Groups.Count; i++)
-        {
-            var g = Groups[i];
-            int entityMultiplier = Groups.Count - i;
-            
-            var personalConstraints = g.GetPersonalConstraints(total);
-            for (int j = 0; j < personalConstraints.Count; j++)
-            {
-                var c = personalConstraints[j];
-                int constraintWeight = personalConstraints.Count - j;
-                
-                c.Priority += entityMultiplier * constraintWeight * 10;
-                Registry.Register(c);
-            }
-        }
-        
-        // Дисципліни: позиція у списку - це множник пріоритету
-        for (int i = 0; i < Disciplines.Count; i++)
-        {
-            var d = Disciplines[i];
-            int entityMultiplier = Disciplines.Count - i;
-            
-            var personalConstraints = d.GetPersonalConstraints(total);
-            for (int j = 0; j < personalConstraints.Count; j++)
-            {
-                var c = personalConstraints[j];
-                int constraintWeight = personalConstraints.Count - j;
-                
-                c.Priority += entityMultiplier * constraintWeight * 10;
-                Registry.Register(c);
-            }
-        }
-
-        foreach (var l in Lessons)
-        {
-            foreach (var c in l.GetLessonConstraints()) Registry.Register(c);
-        }
-    }
-
-    public void ApplyConstraintsMainLoop()
-    {
-        var processed = new HashSet<IConstraint>();
-        
-        while (true)
-        {
-            var ordered = Registry.GetOrdered();
-            var next = ordered.FirstOrDefault(c => !processed.Contains(c));
-            
-            if (next == null) break; // Усі обмеження виконано
-            
-            next.Apply(this);
-            processed.Add(next);
-            
-            ValidateConsistency();
-        }
-    }
-
-    public void ValidateConsistency()
-    {
-        int total = Config.TotalCells;
-
-        for (int i = 0; i < total; i++)
-        {
-            foreach (var lesson in Lessons)
-            {
-                var teacher = Teachers.FirstOrDefault(t => t.Id == lesson.TeacherId);
-                var group = Groups.FirstOrDefault(g => g.Id == lesson.StudentGroupId);
-                
-                if (teacher == null || group == null) continue;
-
-                bool teacherHasLesson = !teacher.Grid.IsFree(i) && teacher.Grid.Cells[i] == lesson.Id;
-                bool groupHasLesson = !group.Grid.IsFree(i) && group.Grid.Cells[i] == lesson.Id;
-
-                if (teacherHasLesson && !groupHasLesson)
+                if (gMask[i] && tMask[i] && rMask[i] && dMask[i])
                 {
-                    teacher.Grid.Remove(i);
-                }
-                if (groupHasLesson && !teacherHasLesson)
-                {
-                    group.Grid.Remove(i);
+                    return i;
                 }
             }
+
+            return -1;
+        }
+
+        private Lesson CommitTransaction(StudentGroup g, Teacher t, Room r, Discipline d, int slot)
+        {
+            var lesson = new Lesson
+            {
+                DisciplineId = d.Id,
+                TeacherId = t.Id,
+                StudentGroupId = g.Id,
+                RoomId = r.Id,
+                CellIndex = slot
+            };
+
+            // Update domain state
+            g.BookSlot(slot);
+            t.BookSlot(slot);
+            r.ReserveSeats(g.StudentsCount, slot);
+            
+            // Add requirement progress
+            var req = g.Requirements.First(req => req.DisciplineId == d.Id);
+            req.FulfilledHours++;
+
+            // Update grid
+            _grid[slot].Add(lesson);
+
+            return lesson;
+        }
+
+        private void RollbackTransaction(Lesson lesson)
+        {
+            var g = Groups.First(x => x.Id == lesson.StudentGroupId);
+            var t = Teachers.First(x => x.Id == lesson.TeacherId);
+            var r = Rooms.First(x => x.Id == lesson.RoomId);
+
+            // Revert domain state
+            g.ReleaseSlot(lesson.CellIndex);
+            t.ReleaseSlot(lesson.CellIndex);
+            r.FreeSeats(g.StudentsCount, lesson.CellIndex);
+
+            // Revert requirement progress
+            var req = g.Requirements.First(req => req.DisciplineId == lesson.DisciplineId);
+            req.FulfilledHours--;
+
+            // Remove from grid
+            _grid[lesson.CellIndex].Remove(lesson);
         }
     }
 }

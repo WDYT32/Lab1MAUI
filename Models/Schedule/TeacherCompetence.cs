@@ -1,8 +1,9 @@
 using System;
 
-namespace Lab1MAUI.Models.Schedule;
-
-public class TeacherCompetence
+namespace Lab1MAUI.Models.Schedule
 {
-    public Guid DisciplineId { get; set; }
+    public class TeacherCompetence
+    {
+        public Guid DisciplineId { get; set; }
+    }
 }

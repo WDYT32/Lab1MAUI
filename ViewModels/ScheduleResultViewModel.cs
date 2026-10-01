@@ -8,7 +8,7 @@ public class ScheduleResultViewModel : BaseViewModel
 {
     private readonly Schedule _schedule;
 
-    public ObservableCollection<Lesson> UnassignedLessons { get; } = new();
+    public ObservableCollection<UnassignedDisplay> UnassignedLessons { get; } = new();
 
     public bool HasUnassignedLessons => UnassignedLessons.Any();
 
@@ -23,11 +23,21 @@ public class ScheduleResultViewModel : BaseViewModel
         UnassignedLessons.Clear();
         
         // Знаходимо уроки без викладача (наш Edge Case)
-        var unassigned = _schedule.Lessons.Where(l => l.TeacherId == System.Guid.Empty);
+        var unassigned = _schedule.Lessons.Where(l => l.TeacherId == System.Guid.Empty).ToList();
         
-        foreach (var lesson in unassigned)
+        var grouped = unassigned
+            .GroupBy(l => new { l.DisciplineId, l.StudentGroupId })
+            .Select(g => new UnassignedDisplay
+            {
+                SubjectName = g.First().SubjectName,
+                GroupName = _schedule.Groups.FirstOrDefault(gr => gr.Id == g.Key.StudentGroupId)?.Name ?? "Невідома група",
+                Hours = g.Count(),
+                TotalMinutes = g.Count() * _schedule.Config.LessonDurationMinutes
+            });
+            
+        foreach (var group in grouped)
         {
-            UnassignedLessons.Add(lesson);
+            UnassignedLessons.Add(group);
         }
         OnPropertyChanged(nameof(HasUnassignedLessons));
         
@@ -92,6 +102,14 @@ public class ScheduleResultViewModel : BaseViewModel
             }
         }
     }
+}
+
+public class UnassignedDisplay
+{
+    public string SubjectName { get; set; }
+    public string GroupName { get; set; }
+    public int Hours { get; set; }
+    public int TotalMinutes { get; set; }
 }
 
 public class GroupScheduleDisplay

@@ -35,6 +35,32 @@ namespace Lab1MAUI.ViewModels
                 }
             }
         }
+
+        public int MinLessonsPerDay
+        {
+            get => _schedule.Config.MinLessonsPerDay;
+            set
+            {
+                if (_schedule.Config.MinLessonsPerDay != value)
+                {
+                    _schedule.Config.MinLessonsPerDay = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public int LessonDurationMinutes
+        {
+            get => _schedule.Config.LessonDurationMinutes;
+            set
+            {
+                if (_schedule.Config.LessonDurationMinutes != value)
+                {
+                    _schedule.Config.LessonDurationMinutes = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
         
         public int TotalCells => _schedule.Config.TotalCells;
 

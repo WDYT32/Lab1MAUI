@@ -76,18 +76,21 @@
                     
                     <!-- Підформа для DailyLimit -->
                     <VerticalStackLayout IsVisible="{Binding IsDailyLimitSelected}" Spacing="5">
+                        <Label Text="💡 Цє обмеження не дозволить розкладу поставити більше уроків, ніж вказано, в межах одного дня." FontSize="12" TextColor="Gray" FontAttributes="Italic" />
                         <Label Text="Максимум уроків на день:" FontSize="14" />
                         <Entry Text="{Binding DailyLimitValue, Mode=TwoWay}" Keyboard="Numeric" BackgroundColor="White" />
                     </VerticalStackLayout>
                     
                     <!-- Підформа для MaxConsecutive -->
                     <VerticalStackLayout IsVisible="{Binding IsMaxConsecutiveSelected}" Spacing="5">
+                        <Label Text="💡 Цє обмеження змусить розклад розбивати підряд йдучі уроки вікном або уроком іншого предмета." FontSize="12" TextColor="Gray" FontAttributes="Italic" />
                         <Label Text="Максимум уроків підряд:" FontSize="14" />
                         <Entry Text="{Binding MaxConsecutiveValue, Mode=TwoWay}" Keyboard="Numeric" BackgroundColor="White" />
                     </VerticalStackLayout>
 
                     <!-- Підформа для Assignment -->
                     <VerticalStackLayout IsVisible="{Binding IsAssignmentSelected}" Spacing="5">
+                        <Label Text="💡 Примусово призначає обраного викладача для цієї групи." FontSize="12" TextColor="Gray" FontAttributes="Italic" />
                         <Label Text="Оберіть викладача (або залиште пустим для будь-якого):" FontSize="14" />
                         <Picker Title="Оберіть викладача" 
                                 ItemsSource="{Binding AvailableTeachers}" 
@@ -100,7 +103,7 @@
                 </VerticalStackLayout>
             </Frame>
 
-            <Label Text="Сортуйте обмеження: вище в списку = вищий пріоритет" FontSize="12" TextColor="Gray" />
+            <Label Text="💡 Підказка: Затисніть та перетягніть обмеження (Drag &amp; Drop) для зміни його важливості. Ті, що вище, виконуються першими." FontSize="12" TextColor="#4198B4" FontAttributes="Italic" />
 
             <CollectionView ItemsSource="{Binding Constraints}" HeightRequest="200">
                 <CollectionView.ItemTemplate>

@@ -1,8 +1,12 @@
-namespace Lab1MAUI.Models.Schedule;
-
-public class ScheduleConfig
+namespace Lab1MAUI.Models.Schedule
 {
-    public int Days { get; set; } = 5;
-    public int CellsPerDay { get; set; } = 8;
-    public int TotalCells => Days * CellsPerDay;
+    public class ScheduleConfig
+    {
+        public int Days { get; set; } = 5;
+        public int CellsPerDay { get; set; } = 4;
+        public int MinLessonsPerDay { get; set; } = 1;
+        public int LessonDurationMinutes { get; set; } = 90;
+        
+        public int TotalCells => Days * CellsPerDay;
+    }
 }

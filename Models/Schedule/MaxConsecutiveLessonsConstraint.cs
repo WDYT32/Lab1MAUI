@@ -1,57 +1,49 @@
 using System;
-using System.Linq;
 
-namespace Lab1MAUI.Models.Schedule;
-
-public class MaxConsecutiveLessonsConstraint : IConstraint
+namespace Lab1MAUI.Models.Schedule
 {
-    public int Priority { get; set; } = 90; 
-    public Guid OwnerId { get; }
-    
-    private readonly int _maxConsecutive;
-
-    public MaxConsecutiveLessonsConstraint(Guid ownerId, int maxConsecutive)
+    public class MaxConsecutiveLessonsConstraint : IConstraint
     {
-        OwnerId = ownerId;
-        _maxConsecutive = maxConsecutive;
-    }
+        private readonly IParticipant _owner;
+        private readonly int _maxConsecutive;
+        private readonly int _cellsPerDay;
 
-    public void Apply(Schedule schedule)
-    {
-        var grid = schedule.Teachers.FirstOrDefault(t => t.Id == OwnerId)?.Grid 
-            ?? schedule.Groups.FirstOrDefault(g => g.Id == OwnerId)?.Grid;
-        
-        if (grid == null) return;
-
-        int days = schedule.Config.Days;
-        int cellsPerDay = schedule.Config.CellsPerDay;
-
-        for (int day = 0; day < days; day++)
+        public MaxConsecutiveLessonsConstraint(IParticipant owner, int maxConsecutive, int cellsPerDay)
         {
-            int startCell = day * cellsPerDay;
-            int potentialChain = 0;
-            
-            for (int i = 0; i < cellsPerDay; i++)
-            {
-                int cellIndex = startCell + i;
-                bool isFree = grid.IsFree(cellIndex);
-                bool isLesson = !isFree && schedule.Lessons.Any(l => l.Id == grid.Cells[cellIndex]);
-                bool isBlocker = !isFree && !isLesson;
+            _owner = owner;
+            _maxConsecutive = maxConsecutive;
+            _cellsPerDay = cellsPerDay;
+        }
 
-                if (isBlocker)
+        public void Apply(bool[] mask)
+        {
+            int days = mask.Length / _cellsPerDay;
+            for (int day = 0; day < days; day++)
+            {
+                int start = day * _cellsPerDay;
+                
+                for (int i = 0; i < _cellsPerDay; i++)
                 {
-                    potentialChain = 0;
-                }
-                else
-                {
-                    potentialChain++;
-                    if (potentialChain > _maxConsecutive)
+                    int cellIndex = start + i;
+                    if (!_owner.IsBooked(cellIndex))
                     {
-                        if (isFree)
+                        int prevConsecutive = 0;
+                        for (int p = i - 1; p >= 0; p--)
                         {
-                            // Розриваємо потенційний або існуючий ланцюжок порожнім уроком
-                            grid.Place(Guid.NewGuid(), cellIndex);
-                            potentialChain = 0; 
+                            if (_owner.IsBooked(start + p)) prevConsecutive++;
+                            else break;
+                        }
+                        
+                        int nextConsecutive = 0;
+                        for (int n = i + 1; n < _cellsPerDay; n++)
+                        {
+                            if (_owner.IsBooked(start + n)) nextConsecutive++;
+                            else break;
+                        }
+
+                        if (prevConsecutive + 1 + nextConsecutive > _maxConsecutive)
+                        {
+                            mask[cellIndex] = false;
                         }
                     }
                 }

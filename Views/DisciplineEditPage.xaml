@@ -23,6 +23,7 @@
                             Title="Оберіть тип обмеження..." />
                             
                     <VerticalStackLayout IsVisible="{Binding IsDailyLimitSelected}" Spacing="10">
+                        <Label Text="💡 Цє обмеження не дозволить розкладу поставити більше уроків цієї дисципліни, ніж вказано, в межах одного дня для однієї групи." FontSize="12" TextColor="Gray" FontAttributes="Italic" />
                         <Label Text="Глобальний ліміт уроків на день (на групу):" />
                         <Entry Text="{Binding DailyLimitValue, Mode=TwoWay}" Keyboard="Numeric" />
                     </VerticalStackLayout>
@@ -31,6 +32,8 @@
                 </VerticalStackLayout>
             </Frame>
             
+            <Label Text="💡 Підказка: Затисніть та перетягніть обмеження (Drag &amp; Drop) для зміни його важливості. Ті, що вище, виконуються першими." FontSize="12" TextColor="#4198B4" FontAttributes="Italic" Margin="0,10,0,0" />
+
             <CollectionView ItemsSource="{Binding Constraints}" Margin="0,10,0,0">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
@@ -53,7 +56,7 @@
                                                            DropCommandParameter="{Binding .}" />
                                 </Frame.GestureRecognizers>
                                 <Grid>
-                                    <Label Text="{Binding Priority, StringFormat='Пріоритет: {0}'}" FontSize="14" VerticalOptions="Center" />
+                                    <Label Text="{Binding .}" FontSize="14" VerticalOptions="Center" />
                                 </Grid>
                             </Frame>
                         </SwipeView>

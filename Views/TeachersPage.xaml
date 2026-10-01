@@ -18,7 +18,8 @@
 
         <BoxView HeightRequest="1" Color="LightGray" Margin="0,10" />
         
-        <Label Text="Список викладачів (відсортовано за кількістю обмежень)" FontSize="16" FontAttributes="Bold" />
+        <Label Text="Список викладачів" FontSize="16" FontAttributes="Bold" />
+        <Label Text="💡 Підказка: Затисніть та перетягніть викладача (Drag &amp; Drop), щоб змінити його глобальний пріоритет. Вища позиція у списку дає більшу вагу всім його обмеженням." FontSize="12" TextColor="#4198B4" FontAttributes="Italic" />
 
         <CollectionView ItemsSource="{Binding Teachers}">
             <CollectionView.ItemTemplate>

@@ -11,8 +11,14 @@
         <Label Text="Кількість робочих днів:" FontSize="16" />
         <Entry Text="{Binding Days, Mode=TwoWay}" Keyboard="Numeric" />
 
-        <Label Text="Кількість уроків на день (клітинок):" FontSize="16" />
+        <Label Text="Кількість уроків на день (максимум):" FontSize="16" />
         <Entry Text="{Binding CellsPerDay, Mode=TwoWay}" Keyboard="Numeric" />
+        
+        <Label Text="Мінімальна кількість уроків на день:" FontSize="16" />
+        <Entry Text="{Binding MinLessonsPerDay, Mode=TwoWay}" Keyboard="Numeric" />
+
+        <Label Text="Тривалість уроку (хв):" FontSize="16" />
+        <Entry Text="{Binding LessonDurationMinutes, Mode=TwoWay}" Keyboard="Numeric" />
         
         <BoxView HeightRequest="1" Color="LightGray" />
         

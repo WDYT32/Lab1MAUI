@@ -11,6 +11,7 @@
         <BoxView HeightRequest="1" Color="LightGray" Margin="0,10" />
         
         <Label Text="Список дисциплін" FontSize="18" FontAttributes="Bold" />
+        <Label Text="💡 Підказка: Затисніть та перетягніть дисципліну (Drag &amp; Drop), щоб змінити її глобальний пріоритет. Вища позиція у списку дає більшу вагу всім її обмеженням." FontSize="12" TextColor="#4198B4" FontAttributes="Italic" />
 
         <CollectionView ItemsSource="{Binding Disciplines}">
             <CollectionView.ItemTemplate>

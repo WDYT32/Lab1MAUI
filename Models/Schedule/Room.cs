@@ -1,0 +1,55 @@
+using System;
+using System.Collections.Generic;
+
+namespace Lab1MAUI.Models.Schedule
+{
+    public class Room : IParticipant
+    {
+        public Guid Id { get; }
+        public string Name { get; }
+        public int Capacity { get; set; }
+        
+        private readonly int[] _reservedSeatsPerSlot;
+        private readonly int _totalCells;
+
+        public Room(Guid id, string name, int capacity, int totalCells)
+        {
+            Id = id;
+            Name = name;
+            Capacity = capacity;
+            _totalCells = totalCells;
+            _reservedSeatsPerSlot = new int[totalCells];
+        }
+
+        public bool[] GetAvailabilityMask()
+        {
+            bool[] mask = new bool[_totalCells];
+            Array.Fill(mask, true);
+            // Availability mask means the room is not physically unavailable (e.g. cleaning, closed).
+            // Capacity constraint is checked dynamically via CanAccommodate during schedule generation.
+            return mask;
+        }
+
+        public bool IsBooked(int cellIndex)
+        {
+            return _reservedSeatsPerSlot[cellIndex] >= Capacity;
+        }
+
+        public bool CanAccommodate(int studentsCount, int cellIndex)
+        {
+            return (_reservedSeatsPerSlot[cellIndex] + studentsCount) <= Capacity;
+        }
+
+        public void ReserveSeats(int studentsCount, int cellIndex)
+        {
+            if (!CanAccommodate(studentsCount, cellIndex))
+                throw new InvalidOperationException($"Room {Name} capacity exceeded at slot {cellIndex}.");
+            _reservedSeatsPerSlot[cellIndex] += studentsCount;
+        }
+
+        public void FreeSeats(int studentsCount, int cellIndex)
+        {
+            _reservedSeatsPerSlot[cellIndex] -= studentsCount;
+        }
+    }
+}
