@@ -6,10 +6,10 @@ using System.Collections.ObjectModel;
 
 namespace Lab1MAUI.Models.MTM
 {
-    /// <summary>
-    /// MTM-клас для дисципліни. Є єдиним джерелом правди для UI.
-    /// При генерації MapToModel() створює новий доменний об'єкт Discipline.
-    /// </summary>
+    
+    
+    
+    
     public class DisciplineMTM
     {
         public Guid Id { get; set; } = Guid.NewGuid();

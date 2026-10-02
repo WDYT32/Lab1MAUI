@@ -5,7 +5,7 @@
              x:Class="Lab1MAUI.Views.TeachersPage"
              Title="Управління викладачами">
 
-    <!-- BindingContext встановлюється через Dependency Injection в code-behind -->
+    
 
     <VerticalStackLayout Padding="20" Spacing="15">
         

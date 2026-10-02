@@ -9,9 +9,9 @@ namespace Lab1MAUI.ViewModels
     {
         private readonly ScheduleMTM _scheduleMTM;
 
-        /// <summary>
-        /// Напряму прив'язана до ScheduleMTM.Groups — жодної синхронізації не потрібно.
-        /// </summary>
+        
+        
+        
         public ObservableCollection<StudentGroupMTM> Groups => _scheduleMTM.Groups;
 
         public ICommand AddGroupCommand { get; }

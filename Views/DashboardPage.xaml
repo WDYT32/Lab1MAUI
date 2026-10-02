@@ -23,7 +23,7 @@
                 FontSize="18"
                 CornerRadius="25"/>
 
-        <!-- Індикатор завантаження прив'язаний до властивості IsGenerating -->
+        
         <ActivityIndicator IsRunning="{Binding IsGenerating}" IsVisible="{Binding IsGenerating}" Color="#2B0B98" />
     </VerticalStackLayout>
 </ContentPage>

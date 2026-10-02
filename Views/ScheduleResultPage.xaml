@@ -22,7 +22,7 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
             <CollectionView.EmptyView>
-                <!-- Відображається, якщо колекція порожня -->
+                
                 <Label Text="Всі уроки успішно розподілені! Викладачів призначено." TextColor="Green" FontAttributes="Bold" FontSize="16" HorizontalOptions="Center" />
             </CollectionView.EmptyView>
         </CollectionView>
@@ -39,26 +39,26 @@
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate>
                                     <VerticalStackLayout Margin="0,5">
-                                        <!-- Day Header -->
+                                        
                                         <Label Text="{Binding DayName}" FontSize="18" TextColor="{Binding MainColor}" HorizontalOptions="Center" Margin="0,5,0,5" FontAttributes="Bold" />
                                         
-                                        <!-- Lessons in Day -->
+                                        
                                         <VerticalStackLayout BindableLayout.ItemsSource="{Binding Lessons}" Spacing="2">
                                             <BindableLayout.ItemTemplate>
                                                 <DataTemplate>
                                                     <Grid ColumnDefinitions="60, *, 60" BackgroundColor="{Binding LightColor}" Padding="0" Margin="0,0,0,2">
-                                                        <!-- Left Column (Lesson Number) -->
+                                                        
                                                         <BoxView Grid.Column="0" Color="{Binding MainColor}" />
                                                         <Label Grid.Column="0" Text="{Binding TimeSlotName}" TextColor="White" FontSize="20" HorizontalOptions="Center" VerticalOptions="Center" FontAttributes="Bold" />
                                                         
-                                                        <!-- Middle Column (Info) -->
+                                                        
                                                         <VerticalStackLayout Grid.Column="1" Padding="10,5">
                                                             <Label Text="{Binding SubjectName}" FontSize="16" TextColor="{Binding MainColor}" FontAttributes="Bold" />
                                                             <Label Text="{Binding RoomName}" FontSize="14" TextColor="Black" />
                                                             <Label Text="{Binding TeacherName}" FontSize="14" TextColor="LightGray" />
                                                         </VerticalStackLayout>
                                                         
-                                                        <!-- Right Column (Info button) -->
+                                                        
                                                         <Border Grid.Column="2" Stroke="#4198B4" StrokeThickness="2" BackgroundColor="Transparent" StrokeShape="RoundRectangle 5" Padding="0" WidthRequest="36" HeightRequest="28" HorizontalOptions="Center" VerticalOptions="Center">
                                                             <Grid>
                                                                 <Ellipse Fill="#4198B4" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center" />

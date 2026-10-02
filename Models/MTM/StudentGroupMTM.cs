@@ -6,11 +6,11 @@ using System.Collections.ObjectModel;
 
 namespace Lab1MAUI.Models.MTM
 {
-    /// <summary>
-    /// MTM-клас для студентської групи. Є єдиним джерелом правди для UI.
-    /// Зберігає назву групи, кількість студентів, вимоги по дисциплінах та обмеження.
-    /// При генерації MapToModel() створює новий доменний об'єкт StudentGroup з чистими масками.
-    /// </summary>
+    
+    
+    
+    
+    
     public class StudentGroupMTM
     {
         public Guid Id { get; set; } = Guid.NewGuid();

@@ -7,7 +7,7 @@
     Title="Особистий кабінет"
     FlyoutBehavior="Flyout">
 
-    <!-- Бічне меню (Flyout) для навігації -->
+    
     
     <FlyoutItem Title="Головна (Дашборд)">
         <ShellContent Route="DashboardPage" ContentTemplate="{DataTemplate views:DashboardPage}" />

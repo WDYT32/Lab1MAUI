@@ -59,7 +59,7 @@ namespace Lab1MAUI.Models.Schedule.Participants
                 constraint.Apply(mask);
             }
 
-            // Also overlay already booked cells for the current group context
+            
             if (_currentContextGroupId != Guid.Empty && _bookedCellsPerGroup.TryGetValue(_currentContextGroupId, out var booked))
             {
                 for (int i = 0; i < _totalCells; i++)

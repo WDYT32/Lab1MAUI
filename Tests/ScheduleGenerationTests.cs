@@ -42,7 +42,7 @@ namespace Lab1MAUI.Tests
             var schedule = CreateEmptySchedule(1, 1);
             var math = new Discipline(Guid.NewGuid(), "Math", 1);
             var room = new Room(Guid.NewGuid(), "101", 30, 1);
-            var t1 = new Teacher(Guid.NewGuid(), "T1", 1) { TargetHours = 1 }; // No competence!
+            var t1 = new Teacher(Guid.NewGuid(), "T1", 1) { TargetHours = 1 }; 
             var g1 = new StudentGroup(Guid.NewGuid(), "G1", 1) { StudentsCount = 20 };
             g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredHours = 1 });
 
@@ -52,7 +52,7 @@ namespace Lab1MAUI.Tests
             schedule.Groups.Add(g1);
 
             schedule.Generate();
-            Assert.Empty(schedule.Grid.SelectMany(c => c)); // Partial schedule is empty
+            Assert.Empty(schedule.Grid.SelectMany(c => c)); 
         }
 
         [Fact]
@@ -60,10 +60,10 @@ namespace Lab1MAUI.Tests
         {
             var schedule = CreateEmptySchedule(1, 1);
             var math = new Discipline(Guid.NewGuid(), "Math", 1);
-            var room = new Room(Guid.NewGuid(), "101", 10, 1); // Capacity 10
+            var room = new Room(Guid.NewGuid(), "101", 10, 1); 
             var t1 = new Teacher(Guid.NewGuid(), "T1", 1) { TargetHours = 1 };
             t1.Competences.Add(new TeacherCompetence { DisciplineId = math.Id });
-            var g1 = new StudentGroup(Guid.NewGuid(), "G1", 1) { StudentsCount = 20 }; // Needs 20
+            var g1 = new StudentGroup(Guid.NewGuid(), "G1", 1) { StudentsCount = 20 }; 
             g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredHours = 1 });
 
             schedule.Disciplines.Add(math);
@@ -99,13 +99,13 @@ namespace Lab1MAUI.Tests
 
             var lessons = schedule.Grid.SelectMany(c => c).ToList();
             Assert.Equal(2, lessons.Count);
-            Assert.NotEqual(lessons[0].CellIndex, lessons[1].CellIndex); // Cannot teach both at same time
+            Assert.NotEqual(lessons[0].CellIndex, lessons[1].CellIndex); 
         }
 
         [Fact]
         public void Generate_TwoGroups_DifferentTeachers_SameSlot_DifferentRooms()
         {
-            var schedule = CreateEmptySchedule(1, 1); // Only 1 slot available!
+            var schedule = CreateEmptySchedule(1, 1); 
             var math = new Discipline(Guid.NewGuid(), "Math", 1);
             
             var r1 = new Room(Guid.NewGuid(), "101", 30, 1);
@@ -129,7 +129,7 @@ namespace Lab1MAUI.Tests
             schedule.Groups.Add(g1);
             schedule.Groups.Add(g2);
 
-            schedule.Generate(); // Should succeed by putting them in the same slot but different rooms
+            schedule.Generate(); 
 
             var lessons = schedule.Grid.SelectMany(c => c).ToList();
             Assert.Equal(2, lessons.Count);
@@ -140,14 +140,14 @@ namespace Lab1MAUI.Tests
         [Fact]
         public void Generate_FailsIfNotEnoughSlotsForRequirements()
         {
-            var schedule = CreateEmptySchedule(1, 2); // 2 slots
+            var schedule = CreateEmptySchedule(1, 2); 
             var math = new Discipline(Guid.NewGuid(), "Math", 2);
             var room = new Room(Guid.NewGuid(), "101", 30, 2);
             var t1 = new Teacher(Guid.NewGuid(), "T1", 2) { TargetHours = 3 };
             t1.Competences.Add(new TeacherCompetence { DisciplineId = math.Id });
             
             var g1 = new StudentGroup(Guid.NewGuid(), "G1", 2) { StudentsCount = 20 };
-            g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredHours = 3 }); // Wants 3 lessons, but only 2 slots exist
+            g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredHours = 3 }); 
 
             schedule.Disciplines.Add(math);
             schedule.Rooms.Add(room);
@@ -155,7 +155,7 @@ namespace Lab1MAUI.Tests
             schedule.Groups.Add(g1);
 
             schedule.Generate();
-            Assert.Equal(2, schedule.Grid.SelectMany(c => c).Count()); // Gets max 2 lessons, not 3
+            Assert.Equal(2, schedule.Grid.SelectMany(c => c).Count()); 
         }
     }
 }

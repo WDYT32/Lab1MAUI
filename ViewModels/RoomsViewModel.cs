@@ -9,9 +9,9 @@ namespace Lab1MAUI.ViewModels
     {
         private readonly ScheduleMTM _scheduleMTM;
 
-        /// <summary>
-        /// Напряму прив'язана до ScheduleMTM.Rooms — жодної синхронізації не потрібно.
-        /// </summary>
+        
+        
+        
         public ObservableCollection<RoomMTM> Rooms => _scheduleMTM.Rooms;
 
         public ICommand AddRoomCommand { get; }

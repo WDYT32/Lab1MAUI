@@ -18,14 +18,14 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
-        // РЕЄСТРАЦІЯ DEPENDENCY INJECTION
+        
 
-        // 1. Єдиний стан UI — ScheduleMTM (Singleton).
-        //    Доменний Schedule більше не є Singleton:
-        //    він створюється заново при кожній генерації через ScheduleMTM.MapToModel().
+        
+        
+        
         builder.Services.AddSingleton<ScheduleMTM>();
 
-        // 2. ViewModels (Singleton — для списків, Transient — для сторінок редагування)
+        
         builder.Services.AddSingleton<DashboardViewModel>();
         builder.Services.AddSingleton<TeachersViewModel>();
         builder.Services.AddSingleton<RoomsViewModel>();
@@ -38,7 +38,7 @@ public static class MauiProgram
         builder.Services.AddTransient<RoomEditViewModel>();
         builder.Services.AddTransient<GroupEditViewModel>();
 
-        // 3. Сторінки (щоб MAUI міг автоматично ін'єктувати ViewModels у їхні конструктори)
+        
         builder.Services.AddSingleton<DashboardPage>();
         builder.Services.AddSingleton<SettingsPage>();
         builder.Services.AddSingleton<DisciplinesPage>();

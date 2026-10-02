@@ -37,10 +37,10 @@ public class ScheduleResultViewModel : BaseViewModel
         OnPropertyChanged(nameof(HasUnassignedLessons));
     }
 
-    /// <summary>
-    /// Порівнює вимоги MTM з фактично розміщеними уроками доменного Schedule.
-    /// Показує скільки годин не вдалося розмістити для кожної пари (група, дисципліна).
-    /// </summary>
+    
+    
+    
+    
     private void LoadUnassignedLessons(ScheduleModel schedule, List<Lesson> allLessons)
     {
         foreach (var groupMTM in _scheduleMTM.Groups)

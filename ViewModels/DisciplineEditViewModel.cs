@@ -35,7 +35,7 @@ namespace Lab1MAUI.ViewModels
                     }
                 }
 
-                // Перестворюємо форму обмежень, оскільки тепер у нас є _discipline
+                
                 ConstraintForm = new ConstraintFormViewModel(ConstraintOwnerType.Discipline, _scheduleMTM.Config);
                 ConstraintForm.OnConstraintAdded += c => Constraints.Add(c);
                 OnPropertyChanged(nameof(ConstraintForm));

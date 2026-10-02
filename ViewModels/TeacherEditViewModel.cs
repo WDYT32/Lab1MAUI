@@ -168,9 +168,9 @@ namespace Lab1MAUI.ViewModels
         }
     }
 
-    /// <summary>
-    /// Display-модель для компетенції викладача у списку редагування.
-    /// </summary>
+    
+    
+    
     public class TeacherCompetenceItem
     {
         public Guid DisciplineId { get; }

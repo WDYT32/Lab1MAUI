@@ -28,7 +28,7 @@ public class DashboardViewModel : BaseViewModel
     {
         _scheduleMTM = scheduleMTM;
 
-        // Команда активна тільки якщо не відбувається генерація
+        
         GenerateScheduleCommand = new Command(async () => await GenerateScheduleAsync(), () => !IsGenerating);
     }
 
@@ -44,16 +44,16 @@ public class DashboardViewModel : BaseViewModel
         IsGenerating = true;
         ((Command)GenerateScheduleCommand).ChangeCanExecute();
 
-        // Імітація роботи алгоритму (щоб UI міг показати лоадер)
+        
         await System.Threading.Tasks.Task.Delay(500);
 
-        // Запускаємо генерацію через MTM — кожен раз новий Schedule
+        
         bool success = _scheduleMTM.TryGenerate(out string errorMessage);
 
         IsGenerating = false;
         ((Command)GenerateScheduleCommand).ChangeCanExecute();
 
-        // Переходимо до результатів незалежно від успіху — там покажемо що розмістилось
+        
         await BaseViewModel.NavigationAction("ScheduleResultPage");
     }
 }

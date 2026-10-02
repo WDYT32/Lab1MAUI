@@ -13,7 +13,7 @@ namespace Lab1MAUI.Tests
         [Fact]
         public void Generate_BacktracksSuccessfully()
         {
-            var config = new ScheduleConfig { Days = 1, CellsPerDay = 2 }; // Only 2 slots
+            var config = new ScheduleConfig { Days = 1, CellsPerDay = 2 }; 
             var schedule = new Schedule(config);
             
             var math = new Discipline(Guid.NewGuid(), "Math", config.TotalCells);
@@ -23,7 +23,7 @@ namespace Lab1MAUI.Tests
             var t1 = new Teacher(Guid.NewGuid(), "T1", config.TotalCells) { TargetHours = 2 };
             t1.Competences.Add(new TeacherCompetence { DisciplineId = math.Id });
             
-            // Teacher can't work slot 0
+            
             t1.Constraints.Add(new TimeOffConstraint(new[] { 0 }));
             schedule.Teachers.Add(t1);
             
@@ -35,7 +35,7 @@ namespace Lab1MAUI.Tests
 
             var lessons = schedule.Grid.SelectMany(c => c).ToList();
             Assert.Single(lessons);
-            Assert.Equal(1, lessons[0].CellIndex); // Must be placed in slot 1 because slot 0 is blocked
+            Assert.Equal(1, lessons[0].CellIndex); 
         }
     }
 }

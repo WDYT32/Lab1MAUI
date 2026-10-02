@@ -16,11 +16,11 @@ namespace Lab1MAUI.ViewModels
         Discipline
     }
 
-    /// <summary>
-    /// ViewModel форми додавання обмеження. Створює ConstraintMTM-об'єкти.
-    /// Власник (IParticipant) більше не потрібен тут — він буде призначений
-    /// під час MapToModel() при генерації розкладу.
-    /// </summary>
+    
+    
+    
+    
+    
     public class ConstraintFormViewModel : BaseViewModel
     {
         private readonly ConstraintOwnerType _ownerType;
@@ -91,15 +91,15 @@ namespace Lab1MAUI.ViewModels
         public bool IsMaxConsecutiveSelected => _selectedConstraintType?.Contains("MaxConsecutive") == true;
         public bool IsTimeOffSelected        => _selectedConstraintType?.Contains("TimeOff")        == true;
 
-        // Поля для DailyLimit
+        
         private int _dailyLimitValue = 3;
         public int DailyLimitValue { get => _dailyLimitValue; set => SetProperty(ref _dailyLimitValue, value); }
 
-        // Поля для MaxConsecutive
+        
         private int _maxConsecutiveValue = 2;
         public int MaxConsecutiveValue { get => _maxConsecutiveValue; set => SetProperty(ref _maxConsecutiveValue, value); }
 
-        // Поля для TimeOff
+        
         private int _timeOffCellIndex = 0;
         public int TimeOffCellIndex { get => _timeOffCellIndex; set => SetProperty(ref _timeOffCellIndex, value); }
 

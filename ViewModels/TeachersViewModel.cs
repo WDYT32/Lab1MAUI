@@ -5,14 +5,14 @@ using System.Windows.Input;
 
 namespace Lab1MAUI.ViewModels
 {
-    // Повна реалізація вимог Частини 2 (ICommand, ObservableCollection)
+    
     public class TeachersViewModel : BaseViewModel
     {
         private readonly ScheduleMTM _scheduleMTM;
 
-        /// <summary>
-        /// Напряму прив'язана до ScheduleMTM.Teachers — жодної синхронізації не потрібно.
-        /// </summary>
+        
+        
+        
         public ObservableCollection<TeacherMTM> Teachers => _scheduleMTM.Teachers;
 
         public ICommand AddTeacherCommand { get; }

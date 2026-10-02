@@ -151,10 +151,10 @@ namespace Lab1MAUI.ViewModels
         }
     }
 
-    /// <summary>
-    /// Display-модель для вимоги групи у списку редагування.
-    /// Реалізує INotifyPropertyChanged для редагування RequiredHours прямо в списку.
-    /// </summary>
+    
+    
+    
+    
     public class GroupRequirementItem : BaseViewModel
     {
         public Guid DisciplineId { get; }

@@ -27,7 +27,7 @@ namespace Lab1MAUI.Tests
             var g1 = new StudentGroup(Guid.NewGuid(), "G1", config.TotalCells) { StudentsCount = 20 };
             g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredHours = 2 });
             
-            // Limit to 1 per day
+            
             g1.Constraints.Add(new DailyLimitConstraint(g1, 1, config.CellsPerDay));
             schedule.Groups.Add(g1);
 
@@ -35,7 +35,7 @@ namespace Lab1MAUI.Tests
 
             var lessons = schedule.Grid.SelectMany(c => c).OrderBy(l => l.CellIndex).ToList();
             
-            // Should be on different days
+            
             int day1 = lessons[0].CellIndex / config.CellsPerDay;
             int day2 = lessons[1].CellIndex / config.CellsPerDay;
             

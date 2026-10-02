@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace Lab1MAUI.ViewModels
 {
-    // Частина 1.3: Реалізація INotifyPropertyChanged з перевіркою рівності
+    
     public class BaseViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -14,7 +14,7 @@ namespace Lab1MAUI.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        // Універсальний сетер, що перевіряє зміну значення (вимога лаби)
+        
         protected bool SetProperty<T>(ref T backingStore, T value, [CallerMemberName] string? propertyName = null)
         {
             if (EqualityComparer<T>.Default.Equals(backingStore, value))
@@ -25,7 +25,7 @@ namespace Lab1MAUI.ViewModels
             return true;
         }
 
-        // Делегат для ін'єкції навігації в тестах
+        
         public static System.Func<string, System.Threading.Tasks.Task> NavigationAction = async (route) => 
         {
             if (Microsoft.Maui.Controls.Shell.Current != null)

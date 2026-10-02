@@ -4,10 +4,10 @@ using System;
 
 namespace Lab1MAUI.Models.MTM
 {
-    /// <summary>
-    /// MTM-клас для аудиторії. Є єдиним джерелом правди для UI.
-    /// Аудиторія не має обмежень (обмежує лише місткість — це вже в доменній логіці Room).
-    /// </summary>
+    
+    
+    
+    
     public class RoomMTM
     {
         public Guid Id { get; set; } = Guid.NewGuid();

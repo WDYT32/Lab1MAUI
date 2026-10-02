@@ -6,9 +6,9 @@ namespace Lab1MAUI.Models.MTM.Constraints
 {
     public class SpecificTimeConstraintMTM : ConstraintMTM
     {
-        /// <summary>
-        /// Індекси дозволених слотів всередині дня (0-based).
-        /// </summary>
+        
+        
+        
         public int[] AllowedCellsInDay { get; set; } = [];
 
         public override string DisplayName =>

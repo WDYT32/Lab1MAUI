@@ -9,9 +9,9 @@ namespace Lab1MAUI.ViewModels
     {
         private readonly ScheduleMTM _scheduleMTM;
 
-        /// <summary>
-        /// Напряму прив'язана до ScheduleMTM.Disciplines — жодної синхронізації не потрібно.
-        /// </summary>
+        
+        
+        
         public ObservableCollection<DisciplineMTM> Disciplines => _scheduleMTM.Disciplines;
 
         public ICommand AddDisciplineCommand { get; }

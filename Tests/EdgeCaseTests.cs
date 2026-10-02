@@ -18,7 +18,7 @@ namespace Lab1MAUI.Tests
             var math = new Discipline(Guid.NewGuid(), "Math", config.TotalCells);
             schedule.Disciplines.Add(math);
             
-            // Room capacity 10, but group has 20
+            
             schedule.Rooms.Add(new Room(Guid.NewGuid(), "101", 10, config.TotalCells));
             
             var teacher1 = new Teacher(Guid.NewGuid(), "T1", config.TotalCells) { TargetHours = 1 };
@@ -30,7 +30,7 @@ namespace Lab1MAUI.Tests
             schedule.Groups.Add(group1);
 
             schedule.Generate();
-            Assert.Empty(schedule.Grid[0]); // No lessons scheduled because room is too small
+            Assert.Empty(schedule.Grid[0]); 
         }
     }
 }

@@ -47,7 +47,7 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <!-- Модальне вікно / Панель вибору дисципліни -->
+            
             <Frame BorderColor="#2B0B98" BackgroundColor="#E5E7EB" Padding="15" CornerRadius="10" IsVisible="{Binding DisciplineSelection.IsVisible}" Margin="0,10">
                 <VerticalStackLayout Spacing="10" BindingContext="{Binding DisciplineSelection}">
                     <Label Text="Пошук дисципліни" FontAttributes="Bold" FontSize="16" />
@@ -74,19 +74,19 @@
 
             <Label Text="Особисті Обмеження" FontSize="18" FontAttributes="Bold" />
             
-            <!-- Constraint Form з BindingContext = ConstraintForm -->
+            
             <Frame BindingContext="{Binding ConstraintForm}" BackgroundColor="#F5F5F5" Padding="15" CornerRadius="8" HasShadow="False">
                 <VerticalStackLayout Spacing="10">
                     <Picker Title="Виберіть тип обмеження" ItemsSource="{Binding ConstraintTypes}" SelectedItem="{Binding SelectedConstraintType}" />
                     
-                    <!-- Підформа для DailyLimit -->
+                    
                     <VerticalStackLayout IsVisible="{Binding IsDailyLimitSelected}" Spacing="5">
                         <Label Text="💡 Цє обмеження не дозволить розкладу поставити більше уроків, ніж вказано, в межах одного дня." FontSize="12" TextColor="Gray" FontAttributes="Italic" />
                         <Label Text="Максимум уроків на день:" FontSize="14" />
                         <Entry Text="{Binding DailyLimitValue, Mode=TwoWay}" Keyboard="Numeric" BackgroundColor="White" />
                     </VerticalStackLayout>
                     
-                    <!-- Підформа для MaxConsecutive -->
+                    
                     <VerticalStackLayout IsVisible="{Binding IsMaxConsecutiveSelected}" Spacing="5">
                         <Label Text="💡 Цє обмеження змусить розклад розбивати підряд йдучі уроки вікном або уроком іншого предмета." FontSize="12" TextColor="Gray" FontAttributes="Italic" />
                         <Label Text="Максимум уроків підряд:" FontSize="14" />

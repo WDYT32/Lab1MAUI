@@ -37,7 +37,7 @@ namespace Lab1MAUI.Models.Schedule
 
             if (!GenerateRecursive(0))
             {
-                // Reconstruct best partial state
+                
                 foreach (var c in _grid) c.Clear();
                 foreach (var g in Groups) { g.ClearBookings(); foreach (var req in g.Requirements) req.FulfilledHours = 0; }
                 foreach (var t in Teachers) { t.ClearBookings(); }
@@ -74,7 +74,7 @@ namespace Lab1MAUI.Models.Schedule
                 }).ToList();
             }
 
-            // Find next group with unfulfilled requirements
+            
             StudentGroup currentGroup = null;
             GroupRequirement currentReq = null;
             
@@ -89,7 +89,7 @@ namespace Lab1MAUI.Models.Schedule
                 }
             }
 
-            // Base case: all requirements for all groups are fulfilled!
+            
             if (currentGroup == null) return true;
 
             var discipline = Disciplines.FirstOrDefault(d => d.Id == currentReq.DisciplineId);
@@ -102,22 +102,22 @@ namespace Lab1MAUI.Models.Schedule
             {
                 foreach (var room in eligibleRooms)
                 {
-                    discipline.SetContext(currentGroup.Id); // Apply context for discipline limits
+                    discipline.SetContext(currentGroup.Id); 
                     int slot = FindCommonFreeSlot(currentGroup, teacher, room, discipline);
                     if (slot != -1)
                     {
                         var lesson = CommitTransaction(currentGroup, teacher, room, discipline, slot);
                         
-                        // Recursive call
+                        
                         if (GenerateRecursive(placedCount + 1)) return true;
                         
-                        // Backtrack if failed
+                        
                         RollbackTransaction(lesson);
                     }
                 }
             }
 
-            return false; // Dead end, need to backtrack from caller
+            return false; 
         }
 
         private IEnumerable<Teacher> FilterTeachers(Discipline disc, StudentGroup group)
@@ -164,17 +164,17 @@ namespace Lab1MAUI.Models.Schedule
                 CellIndex = slot
             };
 
-            // Update domain state
+            
             g.BookSlot(slot);
             t.BookSlot(slot);
             r.ReserveSeats(g.StudentsCount, slot);
-            d.BookSlot(slot, g.Id); // Track discipline bookings for the group
+            d.BookSlot(slot, g.Id); 
             
-            // Add requirement progress
+            
             var req = g.Requirements.First(req => req.DisciplineId == d.Id);
             req.FulfilledHours++;
 
-            // Update grid
+            
             _grid[slot].Add(lesson);
 
             return lesson;
@@ -187,17 +187,17 @@ namespace Lab1MAUI.Models.Schedule
             var r = Rooms.First(x => x.Id == lesson.RoomId);
             var d = Disciplines.First(x => x.Id == lesson.DisciplineId);
 
-            // Revert domain state
+            
             g.ReleaseSlot(lesson.CellIndex);
             t.ReleaseSlot(lesson.CellIndex);
             r.FreeSeats(g.StudentsCount, lesson.CellIndex);
-            d.ReleaseSlot(lesson.CellIndex, g.Id); // Release discipline bookings
+            d.ReleaseSlot(lesson.CellIndex, g.Id); 
 
-            // Revert requirement progress
+            
             var req = g.Requirements.First(req => req.DisciplineId == lesson.DisciplineId);
             req.FulfilledHours--;
 
-            // Remove from grid
+            
             _grid[lesson.CellIndex].Remove(lesson);
         }
     }
