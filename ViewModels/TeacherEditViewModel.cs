@@ -111,7 +111,16 @@ namespace Lab1MAUI.ViewModels
                 _teacher.Constraints.Clear();
                 foreach (var c in Constraints) _teacher.Constraints.Add(c);
 
-                if (_isNew) _scheduleMTM.Teachers.Add(_teacher);
+                if (_isNew)
+                {
+                    _scheduleMTM.Teachers.Add(_teacher);
+                }
+                else
+                {
+                    var index = _scheduleMTM.Teachers.IndexOf(_teacher);
+                    if (index >= 0)
+                        _scheduleMTM.Teachers[index] = _teacher;
+                }
                 await BaseViewModel.NavigationAction("..");
             });
 

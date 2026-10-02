@@ -73,7 +73,15 @@ namespace Lab1MAUI.ViewModels
                 foreach (var c in Constraints) _discipline.Constraints.Add(c);
 
                 if (!_scheduleMTM.Disciplines.Contains(_discipline))
+                {
                     _scheduleMTM.Disciplines.Add(_discipline);
+                }
+                else
+                {
+                    var index = _scheduleMTM.Disciplines.IndexOf(_discipline);
+                    if (index >= 0)
+                        _scheduleMTM.Disciplines[index] = _discipline;
+                }
 
                 await BaseViewModel.NavigationAction("..");
             });

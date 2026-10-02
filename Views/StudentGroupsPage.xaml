@@ -45,9 +45,10 @@
                                                        DropCommand="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:StudentGroupsViewModel}}, Path=DropCommand}" 
                                                        DropCommandParameter="{Binding .}" />
                             </Frame.GestureRecognizers>
-                            <Grid>
-                                <Label Text="{Binding Name}" FontSize="16" VerticalOptions="Center" />
-                            </Grid>
+                            <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                                <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold" />
+                                <Label Text="{Binding StudentsCount, StringFormat='({0} чол.)'}" FontSize="14" TextColor="Gray" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
                         </Frame>
                     </SwipeView>
                 </DataTemplate>

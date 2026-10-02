@@ -98,7 +98,16 @@ namespace Lab1MAUI.ViewModels
                 _group.Constraints.Clear();
                 foreach (var c in Constraints) _group.Constraints.Add(c);
 
-                if (_isNew) _scheduleMTM.Groups.Add(_group);
+                if (_isNew)
+                {
+                    _scheduleMTM.Groups.Add(_group);
+                }
+                else
+                {
+                    var index = _scheduleMTM.Groups.IndexOf(_group);
+                    if (index >= 0)
+                        _scheduleMTM.Groups[index] = _group;
+                }
                 await BaseViewModel.NavigationAction("..");
             });
 

@@ -62,7 +62,15 @@ namespace Lab1MAUI.ViewModels
                 _room.Capacity = Capacity;
 
                 if (_isNew && !_scheduleMTM.Rooms.Contains(_room))
+                {
                     _scheduleMTM.Rooms.Add(_room);
+                }
+                else
+                {
+                    var index = _scheduleMTM.Rooms.IndexOf(_room);
+                    if (index >= 0)
+                        _scheduleMTM.Rooms[index] = _room;
+                }
 
                 await BaseViewModel.NavigationAction("..");
             });
