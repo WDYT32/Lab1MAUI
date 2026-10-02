@@ -64,7 +64,12 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <Button Text="Зберегти" Command="{Binding SaveCommand}" BackgroundColor="#2B0B98" TextColor="White" Margin="0,20,0,0" />
+            <Button Text="Зберегти" 
+                    Command="{Binding SaveCommand}" 
+                    BackgroundColor="#4CAF50" 
+                    TextColor="White" 
+                    Margin="0,20,0,0"
+                    HeightRequest="50" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

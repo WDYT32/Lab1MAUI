@@ -10,15 +10,8 @@
             
             <Label Text="Основні дані" FontSize="18" FontAttributes="Bold" />
             
-            <VerticalStackLayout Spacing="5">
-                <Label Text="Назва аудиторії (номер)" FontSize="14" TextColor="Gray" />
-                <Entry Text="{Binding Name, Mode=TwoWay}" Placeholder="Напр. 101a" BackgroundColor="White" />
-            </VerticalStackLayout>
-            
-            <VerticalStackLayout Spacing="5">
-                <Label Text="Місткість (кількість студентів)" FontSize="14" TextColor="Gray" />
-                <Entry Text="{Binding Capacity, Mode=TwoWay}" Keyboard="Numeric" BackgroundColor="White" />
-            </VerticalStackLayout>
+            <Entry Text="{Binding Name, Mode=TwoWay}" Placeholder="Назва аудиторії (напр. 101a)" Keyboard="Text" />
+            <Entry Text="{Binding Capacity, Mode=TwoWay}" Placeholder="Місткість (кількість студентів)" Keyboard="Numeric" />
             
             <Button Text="Зберегти" 
                     Command="{Binding SaveCommand}" 
