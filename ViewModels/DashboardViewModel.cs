@@ -1,19 +1,19 @@
-using System.Threading.Tasks;
-using System.Windows.Input;
+using Lab1MAUI.Models.MTM;
+using Lab1MAUI.Models.MTM.Constraints;
 using Lab1MAUI.Models.Schedule;
-using Lab1MAUI.Models.Schedule.Participants;
-using Lab1MAUI.Models.Schedule.Constraints;
 using Microsoft.Maui.Controls;
+using System;
+using System.Windows.Input;
 
 namespace Lab1MAUI.ViewModels;
 
 public class DashboardViewModel : BaseViewModel
 {
-    private readonly Schedule _schedule;
+    private readonly ScheduleMTM _scheduleMTM;
 
-    public int TotalTeachers => _schedule.Teachers.Count;
-    public int TotalGroups => _schedule.Groups.Count;
-    public int TotalDisciplines => _schedule.Disciplines.Count;
+    public int TotalTeachers => _scheduleMTM.Teachers.Count;
+    public int TotalGroups => _scheduleMTM.Groups.Count;
+    public int TotalDisciplines => _scheduleMTM.Disciplines.Count;
 
     private bool _isGenerating;
     public bool IsGenerating
@@ -24,14 +24,14 @@ public class DashboardViewModel : BaseViewModel
 
     public ICommand GenerateScheduleCommand { get; }
 
-    public DashboardViewModel(Schedule schedule)
+    public DashboardViewModel(ScheduleMTM scheduleMTM)
     {
-        _schedule = schedule;
-        
+        _scheduleMTM = scheduleMTM;
+
         // Команда активна тільки якщо не відбувається генерація
         GenerateScheduleCommand = new Command(async () => await GenerateScheduleAsync(), () => !IsGenerating);
     }
-    
+
     public void RefreshStats()
     {
         OnPropertyChanged(nameof(TotalTeachers));
@@ -39,21 +39,21 @@ public class DashboardViewModel : BaseViewModel
         OnPropertyChanged(nameof(TotalDisciplines));
     }
 
-    private async Task GenerateScheduleAsync()
+    private async System.Threading.Tasks.Task GenerateScheduleAsync()
     {
         IsGenerating = true;
         ((Command)GenerateScheduleCommand).ChangeCanExecute();
 
         // Імітація роботи алгоритму (щоб UI міг показати лоадер)
-        await Task.Delay(500); 
-        
-        // Виклик нашого потужного ядра
-        _schedule.Generate();
+        await System.Threading.Tasks.Task.Delay(500);
+
+        // Запускаємо генерацію через MTM — кожен раз новий Schedule
+        bool success = _scheduleMTM.TryGenerate(out string errorMessage);
 
         IsGenerating = false;
         ((Command)GenerateScheduleCommand).ChangeCanExecute();
 
-        // Перехід на сторінку результатів через Shell
+        // Переходимо до результатів незалежно від успіху — там покажемо що розмістилось
         await BaseViewModel.NavigationAction("ScheduleResultPage");
     }
 }

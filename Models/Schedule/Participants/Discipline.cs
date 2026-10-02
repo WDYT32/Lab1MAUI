@@ -12,12 +12,41 @@ namespace Lab1MAUI.Models.Schedule.Participants
         public List<IConstraint> Constraints { get; } = new();
 
         private readonly int _totalCells;
+        private readonly Dictionary<Guid, bool[]> _bookedCellsPerGroup = new();
+        private Guid _currentContextGroupId;
 
         public Discipline(Guid id, string name, int totalCells)
         {
             Id = id;
             Name = name;
             _totalCells = totalCells;
+        }
+
+        public void SetContext(Guid groupId)
+        {
+            _currentContextGroupId = groupId;
+            if (!_bookedCellsPerGroup.ContainsKey(groupId))
+            {
+                _bookedCellsPerGroup[groupId] = new bool[_totalCells];
+            }
+        }
+
+        public void BookSlot(int cellIndex, Guid groupId)
+        {
+            if (!_bookedCellsPerGroup.ContainsKey(groupId))
+                _bookedCellsPerGroup[groupId] = new bool[_totalCells];
+            _bookedCellsPerGroup[groupId][cellIndex] = true;
+        }
+
+        public void ReleaseSlot(int cellIndex, Guid groupId)
+        {
+            if (_bookedCellsPerGroup.ContainsKey(groupId))
+                _bookedCellsPerGroup[groupId][cellIndex] = false;
+        }
+
+        public void ClearBookings()
+        {
+            _bookedCellsPerGroup.Clear();
         }
 
         public bool[] GetAvailabilityMask()
@@ -30,12 +59,24 @@ namespace Lab1MAUI.Models.Schedule.Participants
                 constraint.Apply(mask);
             }
 
+            // Also overlay already booked cells for the current group context
+            if (_currentContextGroupId != Guid.Empty && _bookedCellsPerGroup.TryGetValue(_currentContextGroupId, out var booked))
+            {
+                for (int i = 0; i < _totalCells; i++)
+                {
+                    if (booked[i]) mask[i] = false;
+                }
+            }
+
             return mask;
         }
 
         public bool IsBooked(int cellIndex)
         {
-            // Disciplines are conceptual and don't get "booked" like a room or teacher.
+            if (_currentContextGroupId != Guid.Empty && _bookedCellsPerGroup.TryGetValue(_currentContextGroupId, out var booked))
+            {
+                return booked[cellIndex];
+            }
             return false;
         }
     }

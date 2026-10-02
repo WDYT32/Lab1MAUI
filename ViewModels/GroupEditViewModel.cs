@@ -1,19 +1,18 @@
+using Lab1MAUI.Models.MTM;
+using Lab1MAUI.Models.MTM.Constraints;
+using Microsoft.Maui.Controls;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
-using Lab1MAUI.Models.Schedule;
-using Lab1MAUI.Models.Schedule.Participants;
-using Lab1MAUI.Models.Schedule.Constraints;
-using Microsoft.Maui.Controls;
 
 namespace Lab1MAUI.ViewModels
 {
     [QueryProperty(nameof(GroupId), "id")]
     public class GroupEditViewModel : BaseViewModel
     {
-        private readonly Schedule _schedule;
-        private StudentGroup _group;
+        private readonly ScheduleMTM _scheduleMTM;
+        private StudentGroupMTM _group;
         private bool _isNew;
 
         public string GroupId
@@ -23,13 +22,13 @@ namespace Lab1MAUI.ViewModels
                 if (value == "new")
                 {
                     _isNew = true;
-                    _group = new StudentGroup(Guid.NewGuid(), "", _schedule.Config.TotalCells);
+                    _group = new StudentGroupMTM();
                     LoadData();
                 }
                 else if (Guid.TryParse(value, out Guid id))
                 {
                     _isNew = false;
-                    _group = _schedule.Groups.FirstOrDefault(g => g.Id == id) ?? new StudentGroup(Guid.NewGuid(), "", _schedule.Config.TotalCells);
+                    _group = _scheduleMTM.Groups.FirstOrDefault(g => g.Id == id) ?? new StudentGroupMTM();
                     LoadData();
                 }
             }
@@ -53,81 +52,69 @@ namespace Lab1MAUI.ViewModels
         public DisciplineSelectionViewModel DisciplineSelection { get; private set; }
 
         public ObservableCollection<GroupRequirementItem> Requirements { get; } = new();
-        public ObservableCollection<IConstraint> Constraints { get; } = new();
+        public ObservableCollection<ConstraintMTM> Constraints { get; } = new();
 
         public ICommand SaveCommand { get; }
         public ICommand AddRequirementCommand { get; }
         public ICommand DeleteRequirementCommand { get; }
         public ICommand DeleteConstraintCommand { get; }
-        public ICommand MoveUpConstraintCommand { get; }
-        public ICommand MoveDownConstraintCommand { get; }
         public ICommand DragStartingConstraintCommand { get; }
         public ICommand DropConstraintCommand { get; }
 
-        private IConstraint _draggedConstraint;
+        private ConstraintMTM _draggedConstraint;
 
-        public GroupEditViewModel(Schedule schedule)
+        public GroupEditViewModel(ScheduleMTM scheduleMTM)
         {
-            _schedule = schedule;
-            
-            DisciplineSelection = new DisciplineSelectionViewModel(_schedule);
-            DisciplineSelection.OnDisciplineSelected += d => 
+            _scheduleMTM = scheduleMTM;
+
+            DisciplineSelection = new DisciplineSelectionViewModel(_scheduleMTM);
+            DisciplineSelection.OnDisciplineSelected += d =>
             {
-                if (!Requirements.Any(r => r.Model.DisciplineId == d.Id))
-                {
-                    Requirements.Add(new GroupRequirementItem(new GroupRequirement { DisciplineId = d.Id, RequiredHours = 2 }, _schedule));
-                }
+                if (!Requirements.Any(r => r.DisciplineId == d.Id))
+                    Requirements.Add(new GroupRequirementItem(d.Id, d.Name, 2));
             };
 
-            ConstraintForm = new ConstraintFormViewModel(ConstraintOwnerType.Group, new StudentGroup(Guid.Empty, "", schedule.Config.TotalCells), _schedule);
-
-            SaveCommand = new Command(async () => 
+            SaveCommand = new Command(async () =>
             {
                 int totalReqHours = Requirements.Sum(r => r.RequiredHours);
-                if (totalReqHours > _schedule.Config.TotalCells)
+                if (totalReqHours > _scheduleMTM.Config.TotalCells)
                 {
                     if (Application.Current?.MainPage != null)
                     {
-                        await Application.Current.MainPage.DisplayAlert("Перевантаження", 
-                            $"Загальна кількість годин ({totalReqHours}) перевищує фізично можливу кількість годин на тиждень ({_schedule.Config.TotalCells}).", "ОК");
+                        await Application.Current.MainPage.DisplayAlert("Перевантаження",
+                            $"Загальна кількість годин ({totalReqHours}) перевищує фізично можливу кількість годин на тиждень ({_scheduleMTM.Config.TotalCells}).",
+                            "ОК");
                     }
                     return;
                 }
 
                 _group.Name = GroupName;
                 _group.StudentsCount = StudentsCount;
-                
+
                 _group.Requirements.Clear();
-                foreach (var r in Requirements) _group.Requirements.Add(r.Model);
-                
+                foreach (var r in Requirements)
+                    _group.Requirements.Add(new GroupRequirementMTM { DisciplineId = r.DisciplineId, RequiredHours = r.RequiredHours });
+
                 _group.Constraints.Clear();
                 foreach (var c in Constraints) _group.Constraints.Add(c);
 
-                if (_isNew) _schedule.Groups.Add(_group);
+                if (_isNew) _scheduleMTM.Groups.Add(_group);
                 await BaseViewModel.NavigationAction("..");
             });
 
-            AddRequirementCommand = new Command(() =>
-            {
-                DisciplineSelection.Open();
-            });
-            
+            AddRequirementCommand = new Command(() => DisciplineSelection.Open());
             DeleteRequirementCommand = new Command<GroupRequirementItem>(req => { if (req != null) Requirements.Remove(req); });
-            DeleteConstraintCommand = new Command<IConstraint>(c => { if (c != null) Constraints.Remove(c); });
+            DeleteConstraintCommand = new Command<ConstraintMTM>(c => { if (c != null) Constraints.Remove(c); });
 
-            DragStartingConstraintCommand = new Command<IConstraint>(c => _draggedConstraint = c);
-            
-            DropConstraintCommand = new Command<IConstraint>(c => 
+            DragStartingConstraintCommand = new Command<ConstraintMTM>(c => _draggedConstraint = c);
+            DropConstraintCommand = new Command<ConstraintMTM>(c =>
             {
                 if (_draggedConstraint != null && _draggedConstraint != c)
                 {
-                    var draggedIndex = Constraints.IndexOf(_draggedConstraint);
-                    var dropIndex = Constraints.IndexOf(c);
-                    
-                    if (draggedIndex >= 0 && dropIndex >= 0)
-                    {
-                        Constraints.Move(draggedIndex, dropIndex);
-                    }
+                    var from = Constraints.IndexOf(_draggedConstraint);
+                    var to   = Constraints.IndexOf(c);
+                    if (from >= 0 && to >= 0)
+                        Constraints.Move(from, to);
                 }
                 _draggedConstraint = null;
             });
@@ -136,41 +123,46 @@ namespace Lab1MAUI.ViewModels
         private void LoadData()
         {
             GroupName = _group.Name;
-            
+            StudentsCount = _group.StudentsCount;
+
             Requirements.Clear();
-            foreach (var r in _group.Requirements) Requirements.Add(new GroupRequirementItem(r, _schedule));
+            foreach (var r in _group.Requirements)
+            {
+                var disciplineName = _scheduleMTM.Disciplines
+                    .FirstOrDefault(d => d.Id == r.DisciplineId)?.Name ?? "Невідома дисципліна";
+                Requirements.Add(new GroupRequirementItem(r.DisciplineId, disciplineName, r.RequiredHours));
+            }
 
             Constraints.Clear();
             foreach (var c in _group.Constraints) Constraints.Add(c);
 
-            ConstraintForm = new ConstraintFormViewModel(ConstraintOwnerType.Group, _group, _schedule);
-            ConstraintForm.OnConstraintAdded += (c) => Constraints.Add(c);
+            ConstraintForm = new ConstraintFormViewModel(ConstraintOwnerType.Group, _scheduleMTM.Config);
+            ConstraintForm.OnConstraintAdded += c => Constraints.Add(c);
             OnPropertyChanged(nameof(ConstraintForm));
         }
     }
 
+    /// <summary>
+    /// Display-модель для вимоги групи у списку редагування.
+    /// Реалізує INotifyPropertyChanged для редагування RequiredHours прямо в списку.
+    /// </summary>
     public class GroupRequirementItem : BaseViewModel
     {
-        public GroupRequirement Model { get; }
+        public Guid DisciplineId { get; }
         public string DisciplineName { get; }
 
+        private int _requiredHours;
         public int RequiredHours
         {
-            get => Model.RequiredHours;
-            set
-            {
-                if (Model.RequiredHours != value)
-                {
-                    Model.RequiredHours = value;
-                    OnPropertyChanged();
-                }
-            }
+            get => _requiredHours;
+            set => SetProperty(ref _requiredHours, value);
         }
 
-        public GroupRequirementItem(GroupRequirement model, Schedule schedule)
+        public GroupRequirementItem(Guid disciplineId, string disciplineName, int requiredHours)
         {
-            Model = model;
-            DisciplineName = schedule.Disciplines.FirstOrDefault(d => d.Id == model.DisciplineId)?.Name ?? "Невідома дисципліна";
+            DisciplineId = disciplineId;
+            DisciplineName = disciplineName;
+            _requiredHours = requiredHours;
         }
     }
 }

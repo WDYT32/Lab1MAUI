@@ -10,13 +10,4 @@ public partial class DisciplinesPage : ContentPage
         InitializeComponent();
         BindingContext = viewModel;
     }
-
-    protected override void OnAppearing()
-    {
-        base.OnAppearing();
-        if (BindingContext is DisciplinesViewModel vm)
-        {
-            vm.LoadDisciplines();
-        }
-    }
 }

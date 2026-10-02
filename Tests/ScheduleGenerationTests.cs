@@ -51,7 +51,8 @@ namespace Lab1MAUI.Tests
             schedule.Teachers.Add(t1);
             schedule.Groups.Add(g1);
 
-            Assert.Throws<InvalidOperationException>(() => schedule.Generate());
+            schedule.Generate();
+            Assert.Empty(schedule.Grid.SelectMany(c => c)); // Partial schedule is empty
         }
 
         [Fact]
@@ -70,7 +71,8 @@ namespace Lab1MAUI.Tests
             schedule.Teachers.Add(t1);
             schedule.Groups.Add(g1);
 
-            Assert.Throws<InvalidOperationException>(() => schedule.Generate());
+            schedule.Generate();
+            Assert.Empty(schedule.Grid.SelectMany(c => c));
         }
 
         [Fact]
@@ -152,7 +154,8 @@ namespace Lab1MAUI.Tests
             schedule.Teachers.Add(t1);
             schedule.Groups.Add(g1);
 
-            Assert.Throws<InvalidOperationException>(() => schedule.Generate());
+            schedule.Generate();
+            Assert.Equal(2, schedule.Grid.SelectMany(c => c).Count()); // Gets max 2 lessons, not 3
         }
     }
 }

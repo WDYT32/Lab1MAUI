@@ -1,11 +1,11 @@
+using Lab1MAUI.Models.MTM;
+using Lab1MAUI.Models.MTM.Constraints;
+using Lab1MAUI.Models.Schedule;
+using Microsoft.Maui.Controls;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
-using Lab1MAUI.Models.Schedule;
-using Lab1MAUI.Models.Schedule.Participants;
-using Lab1MAUI.Models.Schedule.Constraints;
-using Microsoft.Maui.Controls;
 
 namespace Lab1MAUI.ViewModels
 {
@@ -16,21 +16,22 @@ namespace Lab1MAUI.ViewModels
         Discipline
     }
 
+    /// <summary>
+    /// ViewModel форми додавання обмеження. Створює ConstraintMTM-об'єкти.
+    /// Власник (IParticipant) більше не потрібен тут — він буде призначений
+    /// під час MapToModel() при генерації розкладу.
+    /// </summary>
     public class ConstraintFormViewModel : BaseViewModel
     {
         private readonly ConstraintOwnerType _ownerType;
-        private readonly Schedule _schedule;
-        private readonly object _owner;
-        
-        public event Action<IConstraint> OnConstraintAdded;
+        private readonly ScheduleConfig _config;
 
-        public ConstraintFormViewModel(ConstraintOwnerType ownerType, object owner, Schedule schedule)
+        public event Action<ConstraintMTM> OnConstraintAdded;
+
+        public ConstraintFormViewModel(ConstraintOwnerType ownerType, ScheduleConfig config)
         {
             _ownerType = ownerType;
-            _owner = owner;
-            _schedule = schedule;
-
-            foreach (var t in _schedule.Teachers) AvailableTeachers.Add(t);
+            _config = config;
 
             if (ownerType == ConstraintOwnerType.Teacher)
             {
@@ -48,26 +49,19 @@ namespace Lab1MAUI.ViewModels
                 ConstraintTypes.Add("Ліміт занять на день (DailyLimit)");
             }
 
-            AddConstraintCommand = new Command(() => 
+            AddConstraintCommand = new Command(() =>
             {
                 if (string.IsNullOrEmpty(SelectedConstraintType)) return;
 
-                IConstraint newConstraint = null;
-                var participantOwner = _owner as IParticipant;
+                ConstraintMTM newConstraint = null;
 
-                if (IsDailyLimitSelected && participantOwner != null)
-                {
-                    newConstraint = new DailyLimitConstraint(participantOwner, DailyLimitValue, _schedule.Config.CellsPerDay);
-                }
-                else if (IsMaxConsecutiveSelected && participantOwner != null)
-                {
-                    newConstraint = new MaxConsecutiveLessonsConstraint(participantOwner, MaxConsecutiveValue, _schedule.Config.CellsPerDay);
-                }
+                if (IsDailyLimitSelected)
+                    newConstraint = new DailyLimitConstraintMTM { MaxLessonsPerDay = DailyLimitValue };
+                else if (IsMaxConsecutiveSelected)
+                    newConstraint = new MaxConsecutiveLessonsConstraintMTM { MaxConsecutive = MaxConsecutiveValue };
                 else if (IsTimeOffSelected)
-                {
-                    newConstraint = new TimeOffConstraint(new[] { TimeOffCellIndex });
-                }
-                
+                    newConstraint = new TimeOffConstraintMTM { UnavailableCells = [TimeOffCellIndex] };
+
                 if (newConstraint != null)
                 {
                     OnConstraintAdded?.Invoke(newConstraint);
@@ -89,15 +83,13 @@ namespace Lab1MAUI.ViewModels
                     OnPropertyChanged(nameof(IsDailyLimitSelected));
                     OnPropertyChanged(nameof(IsMaxConsecutiveSelected));
                     OnPropertyChanged(nameof(IsTimeOffSelected));
-                    OnPropertyChanged(nameof(IsAssignmentSelected));
                 }
             }
         }
 
-        public bool IsDailyLimitSelected => _selectedConstraintType?.Contains("DailyLimit") == true;
+        public bool IsDailyLimitSelected    => _selectedConstraintType?.Contains("DailyLimit")    == true;
         public bool IsMaxConsecutiveSelected => _selectedConstraintType?.Contains("MaxConsecutive") == true;
-        public bool IsTimeOffSelected => _selectedConstraintType?.Contains("TimeOff") == true;
-        public bool IsAssignmentSelected => _selectedConstraintType?.Contains("Assignment") == true;
+        public bool IsTimeOffSelected        => _selectedConstraintType?.Contains("TimeOff")        == true;
 
         // Поля для DailyLimit
         private int _dailyLimitValue = 3;
@@ -110,15 +102,6 @@ namespace Lab1MAUI.ViewModels
         // Поля для TimeOff
         private int _timeOffCellIndex = 0;
         public int TimeOffCellIndex { get => _timeOffCellIndex; set => SetProperty(ref _timeOffCellIndex, value); }
-
-        public ObservableCollection<Teacher> AvailableTeachers { get; } = new();
-
-        private Teacher _selectedAssignmentTeacher;
-        public Teacher SelectedAssignmentTeacher
-        {
-            get => _selectedAssignmentTeacher;
-            set => SetProperty(ref _selectedAssignmentTeacher, value);
-        }
 
         public ICommand AddConstraintCommand { get; }
     }

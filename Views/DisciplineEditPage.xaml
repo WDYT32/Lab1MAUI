@@ -56,7 +56,7 @@
                                                            DropCommandParameter="{Binding .}" />
                                 </Frame.GestureRecognizers>
                                 <Grid>
-                                    <Label Text="{Binding .}" FontSize="14" VerticalOptions="Center" />
+                                    <Label Text="{Binding DisplayName}" FontSize="14" VerticalOptions="Center" />
                                 </Grid>
                             </Frame>
                         </SwipeView>

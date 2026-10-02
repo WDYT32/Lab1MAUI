@@ -10,13 +10,4 @@ public partial class TeachersPage : ContentPage
         InitializeComponent();
         BindingContext = viewModel;
     }
-
-    protected override void OnAppearing()
-    {
-        base.OnAppearing();
-        if (BindingContext is TeachersViewModel vm)
-        {
-            vm.LoadTeachers();
-        }
-    }
 }

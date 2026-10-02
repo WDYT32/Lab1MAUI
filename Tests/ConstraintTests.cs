@@ -172,7 +172,8 @@ namespace Lab1MAUI.Tests
             schedule.Groups.Add(g1);
 
             // Group and Teacher constraints completely conflict, no common slot possible.
-            Assert.Throws<InvalidOperationException>(() => schedule.Generate());
+            schedule.Generate();
+            Assert.Empty(schedule.Grid.SelectMany(c => c)); // Schedule should be empty
         }
 
         [Fact]
@@ -199,6 +200,64 @@ namespace Lab1MAUI.Tests
             var lessons = schedule.Grid.SelectMany(c => c).ToList();
             Assert.Single(lessons);
             Assert.Equal(1, lessons[0].CellIndex / 2); // Must be Day 1
+        }
+
+        [Fact]
+        public void DisciplineConstraint_DailyLimit_LimitsLessonsPerGroup()
+        {
+            // 2 дні, по 3 слоти на день = 6 слотів
+            var schedule = CreateEmptySchedule(2, 3); 
+            
+            var math = new Discipline(Guid.NewGuid(), "Math", 6);
+            // Додаємо ліміт: не більше 2 уроків математики на день (для однієї групи)
+            math.Constraints.Add(new DailyLimitConstraint(math, 2, 3));
+            
+            var room1 = new Room(Guid.NewGuid(), "101", 30, 6);
+            var room2 = new Room(Guid.NewGuid(), "102", 30, 6);
+            
+            var t1 = new Teacher(Guid.NewGuid(), "T1", 6) { TargetHours = 10 };
+            t1.Competences.Add(new TeacherCompetence { DisciplineId = math.Id });
+            var t2 = new Teacher(Guid.NewGuid(), "T2", 6) { TargetHours = 10 };
+            t2.Competences.Add(new TeacherCompetence { DisciplineId = math.Id });
+            
+            // Група 1 хоче 3 математики. Через ліміт 2/день, вони мають розбитися на 2 дні.
+            var g1 = new StudentGroup(Guid.NewGuid(), "G1", 6) { StudentsCount = 20 };
+            g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredHours = 3 });
+            
+            // Група 2 також хоче 3 математики.
+            var g2 = new StudentGroup(Guid.NewGuid(), "G2", 6) { StudentsCount = 20 };
+            g2.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredHours = 3 });
+
+            schedule.Disciplines.Add(math);
+            schedule.Rooms.Add(room1);
+            schedule.Rooms.Add(room2);
+            schedule.Teachers.Add(t1);
+            schedule.Teachers.Add(t2);
+            schedule.Groups.Add(g1);
+            schedule.Groups.Add(g2);
+
+            schedule.Generate();
+
+            var lessons = schedule.Grid.SelectMany(c => c).ToList();
+            
+            // Загалом має бути 6 уроків
+            Assert.Equal(6, lessons.Count);
+
+            // Перевіряємо Групу 1: не більше 2 уроків математики в День 0 (слоти 0,1,2) і День 1 (слоти 3,4,5)
+            var g1Lessons = lessons.Where(l => l.StudentGroupId == g1.Id).ToList();
+            Assert.Equal(3, g1Lessons.Count);
+            int g1Day0 = g1Lessons.Count(l => l.CellIndex < 3);
+            int g1Day1 = g1Lessons.Count(l => l.CellIndex >= 3);
+            Assert.True(g1Day0 <= 2);
+            Assert.True(g1Day1 <= 2);
+
+            // Перевіряємо Групу 2: аналогічно
+            var g2Lessons = lessons.Where(l => l.StudentGroupId == g2.Id).ToList();
+            Assert.Equal(3, g2Lessons.Count);
+            int g2Day0 = g2Lessons.Count(l => l.CellIndex < 3);
+            int g2Day1 = g2Lessons.Count(l => l.CellIndex >= 3);
+            Assert.True(g2Day0 <= 2);
+            Assert.True(g2Day1 <= 2);
         }
     }
 }

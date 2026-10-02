@@ -1,20 +1,18 @@
+using Lab1MAUI.Models.MTM;
+using Microsoft.Maui.Controls;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
-using Lab1MAUI.Models.Schedule;
-using Lab1MAUI.Models.Schedule.Participants;
-using Lab1MAUI.Models.Schedule.Constraints;
-using Microsoft.Maui.Controls;
 
 namespace Lab1MAUI.ViewModels
 {
     public class DisciplineSelectionViewModel : BaseViewModel
     {
-        private readonly Schedule _schedule;
-        public ObservableCollection<Discipline> FilteredDisciplines { get; } = new();
+        private readonly ScheduleMTM _scheduleMTM;
+        public ObservableCollection<DisciplineMTM> FilteredDisciplines { get; } = new();
 
-        public event Action<Discipline> OnDisciplineSelected;
+        public event Action<DisciplineMTM> OnDisciplineSelected;
 
         private string _searchQuery = string.Empty;
         public string SearchQuery
@@ -23,9 +21,7 @@ namespace Lab1MAUI.ViewModels
             set
             {
                 if (SetProperty(ref _searchQuery, value))
-                {
                     FilterDisciplines();
-                }
             }
         }
 
@@ -39,11 +35,11 @@ namespace Lab1MAUI.ViewModels
         public ICommand SelectCommand { get; }
         public ICommand CancelCommand { get; }
 
-        public DisciplineSelectionViewModel(Schedule schedule)
+        public DisciplineSelectionViewModel(ScheduleMTM scheduleMTM)
         {
-            _schedule = schedule;
+            _scheduleMTM = scheduleMTM;
 
-            SelectCommand = new Command<Discipline>(d =>
+            SelectCommand = new Command<DisciplineMTM>(d =>
             {
                 if (d != null)
                 {
@@ -52,10 +48,7 @@ namespace Lab1MAUI.ViewModels
                 }
             });
 
-            CancelCommand = new Command(() => 
-            {
-                IsVisible = false;
-            });
+            CancelCommand = new Command(() => IsVisible = false);
         }
 
         public void Open()
@@ -68,11 +61,12 @@ namespace Lab1MAUI.ViewModels
         private void FilterDisciplines()
         {
             FilteredDisciplines.Clear();
-            var results = string.IsNullOrWhiteSpace(SearchQuery) 
-                ? _schedule.Disciplines 
-                : _schedule.Disciplines.Where(d => d.Name.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase));
-                
-            foreach (var r in results) FilteredDisciplines.Add(r);
+            var results = string.IsNullOrWhiteSpace(SearchQuery)
+                ? _scheduleMTM.Disciplines
+                : _scheduleMTM.Disciplines.Where(d =>
+                    d.Name.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase));
+
+            foreach (var d in results) FilteredDisciplines.Add(d);
         }
     }
 }

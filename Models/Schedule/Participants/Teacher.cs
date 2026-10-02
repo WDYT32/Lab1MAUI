@@ -77,5 +77,11 @@ namespace Lab1MAUI.Models.Schedule.Participants
             _bookedCells[cellIndex] = false;
             _assignedHours--;
         }
+
+        public void ClearBookings()
+        {
+            Array.Fill(_bookedCells, false);
+            _assignedHours = 0;
+        }
     }
 }

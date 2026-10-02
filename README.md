@@ -306,8 +306,11 @@ flowchart TD
     
     CombineMasks --> CheckTrue{"CombinedMask <br/> містить хоч один TRUE?"}
     
-    CheckTrue -->|Так, Слот знайдено| PlaceLesson["Підтвердження Транзакції:<br/>1. Записати Урок у перший знайдений Слот<br/>2. Зменшити RequiredHours<br/>3. mask[i] = false для всіх учасників"]
-    PlaceLesson --> CheckReq
+    CheckTrue -->|Так, Слот знайдено| PlaceLesson["Підтвердження Транзакції:<br/>1. Записати Урок у Слот<br/>2. Збільшити FulfilledHours<br/>3. Заблокувати слот для учасників"]
+    PlaceLesson --> UpdateBestState{"Чи розміщено <br/> більше уроків ніж раніше?"}
+    UpdateBestState -->|Так| SaveBest["Зберегти поточний <br/> стан (_bestLessons)"]
+    UpdateBestState -->|Ні| CheckReq
+    SaveBest --> CheckReq
     
     CheckTrue -->|Ні, Колізія| BacktrackRoom["Відкат (Backtrack):<br/>Спробувати наступну Аудиторію"]
     BacktrackRoom --> CheckOtherRoom{"Є ще аудиторії?"}
@@ -317,7 +320,13 @@ flowchart TD
     CheckOtherTeacher -->|Так| PickTeacher
     CheckOtherTeacher -->|Ні| BacktrackDisc["Спробувати наступну Дисципліну"]
     BacktrackDisc --> PickDiscipline
+    
+    Start -.->|Якщо генерація<br/>завершилась невдачею| RestorePartial["Відновлення найкращого<br/>часткового розкладу<br/>з _bestLessons"]
 ```
+
+### Часткова Генерація (Best Partial Schedule)
+Замість того, щоб переривати роботу помилкою при неможливості виконати всі 100% обмежень, алгоритм використовує евристику збереження найкращого проміжного результату. 
+Під час рекурсивного пошуку він відстежує максимальну кількість успішно розміщених уроків. Якщо ідеальний розклад не знайдено (наприклад, через конфлікт `Teacher Daily Limit` та `Group Specific Day`), алгоритм **відновлює найкращий збережений частковий стан** і відображає його користувачу в UI, де чітко вказує нерозподілені години.
 
 ## Сценарії використання (Use Cases)
 
@@ -535,3 +544,15 @@ classDiagram
     GroupEditViewModel *-- ConstraintFormViewModel
 ```
 
+## Покриття Тестами (Testing Suite)
+
+Проєкт містить 50+ автоматизованих xUnit тестів, що гарантують надійність алгоритму та архітектури.
+
+1. **Базові тести алгоритму (`FunctionalAlgorithmTests`, `ScheduleGenerationTests`)**: Перевіряють здатність алгоритму заповнювати сітку без конфліктів, розпізнавати нестачу аудиторій та обробляти базові прив'язки.
+2. **Ізольовані обмеження (`IndividualConstraintTests`, `ConstraintTests`)**: Тестують поведінку `DailyLimit`, `MaxConsecutive`, `SpecificDay`, `SpecificTime` та `TimeOff` незалежно для кожного типу учасника.
+3. **Комбінаторні тести (`CombinatorialScheduleTests`, `ComplexScheduleTests`)**: Велика сітка тестів (>15 сценаріїв), які перевіряють багатовимірні перетини:
+   - Конфлікти між обмеженнями Групи та Викладача (напр. *Teacher TimeOff vs Group Specific Day*).
+   - Динаміка "пляшкових горлечок" (bottlenecks) через нестачу кімнат чи годин викладача.
+   - Екстремальні значення (напр. ліміт 0 уроків на день, або заборона ставити підряд в умовах короткого дня).
+   - Масштабні стрес-тести (100+ уроків, 10 груп, 10 викладачів).
+4. **Тести інфраструктури UI/MTM (`ViewModelIntegrationTests`, `MultipleRegenerationTests`)**: Перевіряють, що багаторазова регенерація розкладу через UI-прошарок не залишає "брудного стану" (сміттєві лічильники годин, хибні маски) між натисканнями кнопки.

@@ -27,16 +27,53 @@ namespace Lab1MAUI.Models.Schedule
             }
         }
 
+        private int _maxPlaced = -1;
+        private List<Lesson> _bestLessons = new();
+
         public void Generate()
         {
-            if (!GenerateRecursive())
+            _maxPlaced = -1;
+            _bestLessons.Clear();
+
+            if (!GenerateRecursive(0))
             {
-                throw new InvalidOperationException("Failed to generate a valid schedule. Constraints are too tight.");
+                // Reconstruct best partial state
+                foreach (var c in _grid) c.Clear();
+                foreach (var g in Groups) { g.ClearBookings(); foreach (var req in g.Requirements) req.FulfilledHours = 0; }
+                foreach (var t in Teachers) { t.ClearBookings(); }
+                foreach (var r in Rooms) { r.ClearBookings(); }
+                foreach (var d in Disciplines) { d.ClearBookings(); }
+
+                foreach (var lesson in _bestLessons)
+                {
+                    var g = Groups.First(x => x.Id == lesson.StudentGroupId);
+                    var t = Teachers.First(x => x.Id == lesson.TeacherId);
+                    var r = Rooms.First(x => x.Id == lesson.RoomId);
+                    var d = Disciplines.First(x => x.Id == lesson.DisciplineId);
+
+                    g.BookSlot(lesson.CellIndex);
+                    t.BookSlot(lesson.CellIndex);
+                    r.ReserveSeats(g.StudentsCount, lesson.CellIndex);
+                    d.BookSlot(lesson.CellIndex, g.Id);
+
+                    g.Requirements.First(req => req.DisciplineId == d.Id).FulfilledHours++;
+                    _grid[lesson.CellIndex].Add(lesson);
+                }
             }
         }
 
-        private bool GenerateRecursive()
+        private bool GenerateRecursive(int placedCount)
         {
+            if (placedCount > _maxPlaced)
+            {
+                _maxPlaced = placedCount;
+                _bestLessons = _grid.SelectMany(c => c).Select(l => new Lesson 
+                { 
+                    Id = l.Id, DisciplineId = l.DisciplineId, TeacherId = l.TeacherId, 
+                    StudentGroupId = l.StudentGroupId, RoomId = l.RoomId, CellIndex = l.CellIndex 
+                }).ToList();
+            }
+
             // Find next group with unfulfilled requirements
             StudentGroup currentGroup = null;
             GroupRequirement currentReq = null;
@@ -65,13 +102,14 @@ namespace Lab1MAUI.Models.Schedule
             {
                 foreach (var room in eligibleRooms)
                 {
+                    discipline.SetContext(currentGroup.Id); // Apply context for discipline limits
                     int slot = FindCommonFreeSlot(currentGroup, teacher, room, discipline);
                     if (slot != -1)
                     {
                         var lesson = CommitTransaction(currentGroup, teacher, room, discipline, slot);
                         
                         // Recursive call
-                        if (GenerateRecursive()) return true;
+                        if (GenerateRecursive(placedCount + 1)) return true;
                         
                         // Backtrack if failed
                         RollbackTransaction(lesson);
@@ -130,6 +168,7 @@ namespace Lab1MAUI.Models.Schedule
             g.BookSlot(slot);
             t.BookSlot(slot);
             r.ReserveSeats(g.StudentsCount, slot);
+            d.BookSlot(slot, g.Id); // Track discipline bookings for the group
             
             // Add requirement progress
             var req = g.Requirements.First(req => req.DisciplineId == d.Id);
@@ -146,11 +185,13 @@ namespace Lab1MAUI.Models.Schedule
             var g = Groups.First(x => x.Id == lesson.StudentGroupId);
             var t = Teachers.First(x => x.Id == lesson.TeacherId);
             var r = Rooms.First(x => x.Id == lesson.RoomId);
+            var d = Disciplines.First(x => x.Id == lesson.DisciplineId);
 
             // Revert domain state
             g.ReleaseSlot(lesson.CellIndex);
             t.ReleaseSlot(lesson.CellIndex);
             r.FreeSeats(g.StudentsCount, lesson.CellIndex);
+            d.ReleaseSlot(lesson.CellIndex, g.Id); // Release discipline bookings
 
             // Revert requirement progress
             var req = g.Requirements.First(req => req.DisciplineId == lesson.DisciplineId);

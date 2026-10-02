@@ -88,16 +88,7 @@
                         <Entry Text="{Binding MaxConsecutiveValue, Mode=TwoWay}" Keyboard="Numeric" BackgroundColor="White" />
                     </VerticalStackLayout>
 
-                    <!-- Підформа для Assignment -->
-                    <VerticalStackLayout IsVisible="{Binding IsAssignmentSelected}" Spacing="5">
-                        <Label Text="💡 Примусово призначає обраного викладача для цієї групи." FontSize="12" TextColor="Gray" FontAttributes="Italic" />
-                        <Label Text="Оберіть викладача (або залиште пустим для будь-якого):" FontSize="14" />
-                        <Picker Title="Оберіть викладача" 
-                                ItemsSource="{Binding AvailableTeachers}" 
-                                ItemDisplayBinding="{Binding LastName}"
-                                SelectedItem="{Binding SelectedAssignmentTeacher}" 
-                                BackgroundColor="White" />
-                    </VerticalStackLayout>
+
                     
                     <Button Text="Додати обмеження в список" Command="{Binding AddConstraintCommand}" BackgroundColor="#2B0B98" TextColor="White" Margin="0,10,0,0" />
                 </VerticalStackLayout>
@@ -127,7 +118,7 @@
                                                            DropCommandParameter="{Binding .}" />
                                 </Frame.GestureRecognizers>
                                 <Grid>
-                                    <Label Text="{Binding .}" FontSize="14" VerticalOptions="Center" />
+                                    <Label Text="{Binding DisplayName}" FontSize="14" VerticalOptions="Center" />
                                 </Grid>
                             </Frame>
                         </SwipeView>

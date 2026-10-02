@@ -63,6 +63,11 @@ namespace Lab1MAUI.Models.Schedule.Participants
             _bookedCells[cellIndex] = false;
         }
 
+        public void ClearBookings()
+        {
+            Array.Fill(_bookedCells, false);
+        }
+
         public List<GroupRequirement> GetUnfulfilledRequirements()
         {
             return Requirements.Where(r => !r.IsFulfilled()).ToList();

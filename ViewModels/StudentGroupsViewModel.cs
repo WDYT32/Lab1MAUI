@@ -1,17 +1,18 @@
-using System;
+using Lab1MAUI.Models.MTM;
+using Microsoft.Maui.Controls;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
-using Lab1MAUI.Models.Schedule;
-using Lab1MAUI.Models.Schedule.Participants;
-using Lab1MAUI.Models.Schedule.Constraints;
-using Microsoft.Maui.Controls;
 
 namespace Lab1MAUI.ViewModels
 {
     public class StudentGroupsViewModel : BaseViewModel
     {
-        private readonly Schedule _schedule;
-        public ObservableCollection<StudentGroup> Groups { get; } = new();
+        private readonly ScheduleMTM _scheduleMTM;
+
+        /// <summary>
+        /// Напряму прив'язана до ScheduleMTM.Groups — жодної синхронізації не потрібно.
+        /// </summary>
+        public ObservableCollection<StudentGroupMTM> Groups => _scheduleMTM.Groups;
 
         public ICommand AddGroupCommand { get; }
         public ICommand EditGroupCommand { get; }
@@ -19,69 +20,42 @@ namespace Lab1MAUI.ViewModels
         public ICommand DragStartingCommand { get; }
         public ICommand DropCommand { get; }
 
-        private StudentGroup _draggedGroup;
+        private StudentGroupMTM _draggedGroup;
 
-        public StudentGroupsViewModel(Schedule schedule)
+        public StudentGroupsViewModel(ScheduleMTM scheduleMTM)
         {
-            _schedule = schedule;
-            
-            LoadGroups();
-            
-            AddGroupCommand = new Command(async () => 
+            _scheduleMTM = scheduleMTM;
+
+            AddGroupCommand = new Command(async () =>
             {
                 await BaseViewModel.NavigationAction("GroupEditPage?id=new");
             });
-            
-            EditGroupCommand = new Command<StudentGroup>(async (group) => 
+
+            EditGroupCommand = new Command<StudentGroupMTM>(async (group) =>
             {
                 if (group != null)
                     await BaseViewModel.NavigationAction($"GroupEditPage?id={group.Id}");
             });
 
-            DeleteGroupCommand = new Command<StudentGroup>((group) => 
+            DeleteGroupCommand = new Command<StudentGroupMTM>((group) =>
             {
                 if (group != null)
-                {
-                    Groups.Remove(group);
-                    _schedule.Groups.Remove(group);
-                }
+                    _scheduleMTM.Groups.Remove(group);
             });
 
-            DragStartingCommand = new Command<StudentGroup>(group => _draggedGroup = group);
-            
-            DropCommand = new Command<StudentGroup>(group => 
+            DragStartingCommand = new Command<StudentGroupMTM>(g => _draggedGroup = g);
+
+            DropCommand = new Command<StudentGroupMTM>(g =>
             {
-                if (_draggedGroup != null && _draggedGroup != group)
+                if (_draggedGroup != null && _draggedGroup != g)
                 {
-                    var draggedIndex = Groups.IndexOf(_draggedGroup);
-                    var dropIndex = Groups.IndexOf(group);
-                    
-                    if (draggedIndex >= 0 && dropIndex >= 0)
-                    {
-                        Groups.Move(draggedIndex, dropIndex);
-                        SyncScheduleList();
-                    }
+                    var from = Groups.IndexOf(_draggedGroup);
+                    var to   = Groups.IndexOf(g);
+                    if (from >= 0 && to >= 0)
+                        Groups.Move(from, to);
                 }
                 _draggedGroup = null;
             });
-        }
-
-        public void LoadGroups()
-        {
-            Groups.Clear();
-            foreach (var g in _schedule.Groups)
-            {
-                Groups.Add(g);
-            }
-        }
-
-        private void SyncScheduleList()
-        {
-            _schedule.Groups.Clear();
-            foreach (var g in Groups)
-            {
-                _schedule.Groups.Add(g);
-            }
         }
     }
 }

@@ -59,5 +59,10 @@ namespace Lab1MAUI.Models.Schedule.Participants
         {
             _reservedSeatsPerSlot[cellIndex] -= studentsCount;
         }
+
+        public void ClearBookings()
+        {
+            Array.Fill(_reservedSeatsPerSlot, 0);
+        }
     }
 }

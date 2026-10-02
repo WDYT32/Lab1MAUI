@@ -1,18 +1,16 @@
+using Lab1MAUI.Models.MTM;
+using Microsoft.Maui.Controls;
 using System;
 using System.Linq;
 using System.Windows.Input;
-using Lab1MAUI.Models.Schedule;
-using Lab1MAUI.Models.Schedule.Participants;
-using Lab1MAUI.Models.Schedule.Constraints;
-using Microsoft.Maui.Controls;
 
 namespace Lab1MAUI.ViewModels
 {
     [QueryProperty(nameof(RoomId), "id")]
     public class RoomEditViewModel : BaseViewModel
     {
-        private readonly Schedule _schedule;
-        private Room _room;
+        private readonly ScheduleMTM _scheduleMTM;
+        private RoomMTM _room;
         private bool _isNew;
 
         public string RoomId
@@ -22,14 +20,14 @@ namespace Lab1MAUI.ViewModels
                 if (value == "new")
                 {
                     _isNew = true;
-                    _room = new Room(Guid.NewGuid(), "", 30, _schedule.Config.TotalCells);
-                    Name = "";
+                    _room = new RoomMTM();
+                    Name = string.Empty;
                     Capacity = 30;
                 }
                 else if (Guid.TryParse(value, out Guid id))
                 {
                     _isNew = false;
-                    _room = _schedule.Rooms.FirstOrDefault(r => r.Id == id) ?? new Room(Guid.NewGuid(), "", 30, _schedule.Config.TotalCells);
+                    _room = _scheduleMTM.Rooms.FirstOrDefault(r => r.Id == id) ?? new RoomMTM();
                     Name = _room.Name;
                     Capacity = _room.Capacity;
                 }
@@ -52,9 +50,9 @@ namespace Lab1MAUI.ViewModels
 
         public ICommand SaveCommand { get; }
 
-        public RoomEditViewModel(Schedule schedule)
+        public RoomEditViewModel(ScheduleMTM scheduleMTM)
         {
-            _schedule = schedule;
+            _scheduleMTM = scheduleMTM;
 
             SaveCommand = new Command(async () =>
             {
@@ -63,10 +61,8 @@ namespace Lab1MAUI.ViewModels
                 _room.Name = Name;
                 _room.Capacity = Capacity;
 
-                if (_isNew && !_schedule.Rooms.Contains(_room))
-                {
-                    _schedule.Rooms.Add(_room);
-                }
+                if (_isNew && !_scheduleMTM.Rooms.Contains(_room))
+                    _scheduleMTM.Rooms.Add(_room);
 
                 await BaseViewModel.NavigationAction("..");
             });

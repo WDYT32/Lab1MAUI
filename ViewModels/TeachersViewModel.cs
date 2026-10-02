@@ -1,17 +1,19 @@
+using Lab1MAUI.Models.MTM;
+using Microsoft.Maui.Controls;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
-using Lab1MAUI.Models.Schedule;
-using Lab1MAUI.Models.Schedule.Participants;
-using Lab1MAUI.Models.Schedule.Constraints;
-using Microsoft.Maui.Controls;
 
 namespace Lab1MAUI.ViewModels
 {
     // Повна реалізація вимог Частини 2 (ICommand, ObservableCollection)
     public class TeachersViewModel : BaseViewModel
     {
-        private readonly Schedule _schedule;
-        public ObservableCollection<Teacher> Teachers { get; } = new();
+        private readonly ScheduleMTM _scheduleMTM;
+
+        /// <summary>
+        /// Напряму прив'язана до ScheduleMTM.Teachers — жодної синхронізації не потрібно.
+        /// </summary>
+        public ObservableCollection<TeacherMTM> Teachers => _scheduleMTM.Teachers;
 
         public ICommand AddTeacherCommand { get; }
         public ICommand EditTeacherCommand { get; }
@@ -19,69 +21,42 @@ namespace Lab1MAUI.ViewModels
         public ICommand DragStartingCommand { get; }
         public ICommand DropCommand { get; }
 
-        private Teacher _draggedTeacher;
+        private TeacherMTM _draggedTeacher;
 
-        public TeachersViewModel(Schedule schedule)
+        public TeachersViewModel(ScheduleMTM scheduleMTM)
         {
-            _schedule = schedule;
-            
-            LoadTeachers();
-            
-            AddTeacherCommand = new Command(async () => 
+            _scheduleMTM = scheduleMTM;
+
+            AddTeacherCommand = new Command(async () =>
             {
                 await BaseViewModel.NavigationAction("TeacherEditPage?id=new");
             });
-            
-            EditTeacherCommand = new Command<Teacher>(async (teacher) => 
+
+            EditTeacherCommand = new Command<TeacherMTM>(async (teacher) =>
             {
                 if (teacher != null)
                     await BaseViewModel.NavigationAction($"TeacherEditPage?id={teacher.Id}");
             });
 
-            DeleteTeacherCommand = new Command<Teacher>((teacher) => 
+            DeleteTeacherCommand = new Command<TeacherMTM>((teacher) =>
             {
                 if (teacher != null)
-                {
-                    Teachers.Remove(teacher);
-                    _schedule.Teachers.Remove(teacher);
-                }
+                    _scheduleMTM.Teachers.Remove(teacher);
             });
 
-            DragStartingCommand = new Command<Teacher>(teacher => _draggedTeacher = teacher);
-            
-            DropCommand = new Command<Teacher>(teacher => 
+            DragStartingCommand = new Command<TeacherMTM>(t => _draggedTeacher = t);
+
+            DropCommand = new Command<TeacherMTM>(t =>
             {
-                if (_draggedTeacher != null && _draggedTeacher != teacher)
+                if (_draggedTeacher != null && _draggedTeacher != t)
                 {
-                    var draggedIndex = Teachers.IndexOf(_draggedTeacher);
-                    var dropIndex = Teachers.IndexOf(teacher);
-                    
-                    if (draggedIndex >= 0 && dropIndex >= 0)
-                    {
-                        Teachers.Move(draggedIndex, dropIndex);
-                        SyncScheduleList();
-                    }
+                    var from = Teachers.IndexOf(_draggedTeacher);
+                    var to   = Teachers.IndexOf(t);
+                    if (from >= 0 && to >= 0)
+                        Teachers.Move(from, to);
                 }
                 _draggedTeacher = null;
             });
-        }
-
-        public void LoadTeachers()
-        {
-            Teachers.Clear();
-            foreach (var t in _schedule.Teachers)
-            {
-                Teachers.Add(t);
-            }
-        }
-
-        private void SyncScheduleList()
-        {
-            _schedule.Teachers.Clear();
-            foreach (var t in Teachers)
-            {
-                _schedule.Teachers.Add(t);
-            }
         }
     }
 }

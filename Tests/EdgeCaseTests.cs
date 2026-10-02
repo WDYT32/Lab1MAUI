@@ -29,7 +29,8 @@ namespace Lab1MAUI.Tests
             group1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredHours = 1 });
             schedule.Groups.Add(group1);
 
-            Assert.Throws<InvalidOperationException>(() => schedule.Generate());
+            schedule.Generate();
+            Assert.Empty(schedule.Grid[0]); // No lessons scheduled because room is too small
         }
     }
 }

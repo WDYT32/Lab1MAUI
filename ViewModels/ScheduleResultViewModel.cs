@@ -1,109 +1,124 @@
+using Lab1MAUI.Models.MTM;
+using Lab1MAUI.Models.Schedule;
+using ScheduleModel = Lab1MAUI.Models.Schedule.Schedule;
 using System.Collections.ObjectModel;
 using System.Linq;
-using Lab1MAUI.Models.Schedule;
-using Lab1MAUI.Models.Schedule.Participants;
-using Lab1MAUI.Models.Schedule.Constraints;
 
 namespace Lab1MAUI.ViewModels;
 
 public class ScheduleResultViewModel : BaseViewModel
 {
-    private readonly Schedule _schedule;
+    private readonly ScheduleMTM _scheduleMTM;
 
     public ObservableCollection<UnassignedDisplay> UnassignedLessons { get; } = new();
+    public ObservableCollection<GroupScheduleDisplay> GroupSchedules { get; } = new();
 
     public bool HasUnassignedLessons => UnassignedLessons.Any();
 
-    public ScheduleResultViewModel(Schedule schedule)
+    public ScheduleResultViewModel(ScheduleMTM scheduleMTM)
     {
-        _schedule = schedule;
-        LoadUnassignedLessons();
+        _scheduleMTM = scheduleMTM;
+        LoadResults();
     }
 
-    private void LoadUnassignedLessons()
+    private void LoadResults()
     {
         UnassignedLessons.Clear();
-        
-        // Знаходимо уроки без викладача (наш Edge Case)
-        var allLessons = _schedule.Grid.SelectMany(cell => cell).ToList();
-        var unassigned = allLessons.Where(l => l.TeacherId == System.Guid.Empty).ToList();
-        
-        var grouped = unassigned
-            .GroupBy(l => new { l.DisciplineId, l.StudentGroupId })
-            .Select(g => new UnassignedDisplay
-            {
-                SubjectName = _schedule.Disciplines.FirstOrDefault(d => d.Id == g.Key.DisciplineId)?.Name ?? "Невідомо",
-                GroupName = _schedule.Groups.FirstOrDefault(gr => gr.Id == g.Key.StudentGroupId)?.Name ?? "Невідома група",
-                Hours = g.Count(),
-                TotalMinutes = g.Count() * _schedule.Config.LessonDurationMinutes
-            });
-            
-        foreach (var group in grouped)
-        {
-            UnassignedLessons.Add(group);
-        }
+        GroupSchedules.Clear();
+
+        var schedule = _scheduleMTM.LastResult;
+        if (schedule == null) return;
+
+        var allLessons = schedule.Grid.SelectMany(cell => cell).ToList();
+
+        LoadUnassignedLessons(schedule, allLessons);
+        LoadGroupSchedules(schedule, allLessons);
+
         OnPropertyChanged(nameof(HasUnassignedLessons));
-        
-        LoadGroupSchedules(allLessons);
     }
 
-    public ObservableCollection<GroupScheduleDisplay> GroupSchedules { get; } = new();
-
-    private void LoadGroupSchedules(List<Lesson> allLessons)
+    /// <summary>
+    /// Порівнює вимоги MTM з фактично розміщеними уроками доменного Schedule.
+    /// Показує скільки годин не вдалося розмістити для кожної пари (група, дисципліна).
+    /// </summary>
+    private void LoadUnassignedLessons(ScheduleModel schedule, List<Lesson> allLessons)
     {
-        GroupSchedules.Clear();
-        
-        var validLessons = allLessons.Where(l => l.TeacherId != System.Guid.Empty).ToList();
-        
-        foreach (var group in _schedule.Groups)
+        foreach (var groupMTM in _scheduleMTM.Groups)
         {
-            var display = new GroupScheduleDisplay { GroupName = group.Name };
-            var groupLessons = validLessons.Where(l => l.StudentGroupId == group.Id).ToList();
-            
+            foreach (var reqMTM in groupMTM.Requirements)
+            {
+                int placed = allLessons.Count(l =>
+                    l.StudentGroupId == groupMTM.Id &&
+                    l.DisciplineId == reqMTM.DisciplineId);
+
+                int unassigned = reqMTM.RequiredHours - placed;
+                if (unassigned <= 0) continue;
+
+                var disciplineName = _scheduleMTM.Disciplines
+                    .FirstOrDefault(d => d.Id == reqMTM.DisciplineId)?.Name ?? "Невідомо";
+
+                UnassignedLessons.Add(new UnassignedDisplay
+                {
+                    SubjectName = disciplineName,
+                    GroupName   = groupMTM.Name,
+                    Hours       = unassigned,
+                    TotalMinutes = unassigned * schedule.Config.LessonDurationMinutes
+                });
+            }
+        }
+    }
+
+    private void LoadGroupSchedules(ScheduleModel schedule, List<Lesson> allLessons)
+    {
+        foreach (var groupMTM in _scheduleMTM.Groups)
+        {
+            var display = new GroupScheduleDisplay { GroupName = groupMTM.Name };
+            var groupLessons = allLessons.Where(l => l.StudentGroupId == groupMTM.Id).ToList();
+
             var lessonsByDay = groupLessons
-                .Select(l => {
-                    int day = l.CellIndex / _schedule.Config.CellsPerDay;
-                    int timeSlot = l.CellIndex % _schedule.Config.CellsPerDay;
-                    return new { Lesson = l, Day = day, TimeSlot = timeSlot };
+                .Select(l => new
+                {
+                    Lesson   = l,
+                    Day      = l.CellIndex / schedule.Config.CellsPerDay,
+                    TimeSlot = l.CellIndex % schedule.Config.CellsPerDay
                 })
                 .GroupBy(x => x.Day)
                 .OrderBy(g => g.Key);
-            
+
             foreach (var dayGroup in lessonsByDay)
             {
-                bool isEvenDay = dayGroup.Key % 2 == 0;
-                string mainColor = isEvenDay ? "#E09040" : "#2B6048";
+                bool isEvenDay   = dayGroup.Key % 2 == 0;
+                string mainColor  = isEvenDay ? "#E09040" : "#2B6048";
                 string lightColor = isEvenDay ? "#FFF8F0" : "#F0FFF8";
-                
-                var dayDisplay = new DayScheduleDisplay 
-                { 
-                    DayName = $"День {dayGroup.Key + 1}",
+
+                var dayDisplay = new DayScheduleDisplay
+                {
+                    DayName   = $"День {dayGroup.Key + 1}",
                     MainColor = mainColor
                 };
-                
+
                 foreach (var item in dayGroup.OrderBy(x => x.TimeSlot))
                 {
-                    var teacher = _schedule.Teachers.FirstOrDefault(t => t.Id == item.Lesson.TeacherId);
-                    var discipline = _schedule.Disciplines.FirstOrDefault(d => d.Id == item.Lesson.DisciplineId);
-                    var room = _schedule.Rooms.FirstOrDefault(r => r.Id == item.Lesson.RoomId);
-                    
+                    var teacher    = schedule.Teachers.FirstOrDefault(t => t.Id == item.Lesson.TeacherId);
+                    var discipline = schedule.Disciplines.FirstOrDefault(d => d.Id == item.Lesson.DisciplineId);
+                    var room       = schedule.Rooms.FirstOrDefault(r => r.Id == item.Lesson.RoomId);
+
                     dayDisplay.Lessons.Add(new LessonDisplay
                     {
                         TimeSlotName = (item.TimeSlot + 1).ToString(),
-                        SubjectName = discipline?.Name ?? "Невідомо",
-                        TeacherName = teacher?.Name ?? "Невідомий",
-                        RoomName = room?.Name ?? "ON-LINE",
-                        MainColor = mainColor,
-                        LightColor = lightColor
+                        SubjectName  = discipline?.Name ?? "Невідомо",
+                        TeacherName  = teacher?.Name   ?? "Невідомий",
+                        RoomName     = room?.Name      ?? "ON-LINE",
+                        MainColor    = mainColor,
+                        LightColor   = lightColor
                     });
                 }
+
                 display.Days.Add(dayDisplay);
             }
-            
+
             if (display.Days.Any())
-            {
                 GroupSchedules.Add(display);
-            }
         }
     }
 }

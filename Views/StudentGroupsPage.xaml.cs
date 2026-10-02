@@ -10,13 +10,4 @@ public partial class StudentGroupsPage : ContentPage
         InitializeComponent();
         BindingContext = viewModel;
     }
-
-    protected override void OnAppearing()
-    {
-        base.OnAppearing();
-        if (BindingContext is StudentGroupsViewModel vm)
-        {
-            vm.LoadGroups();
-        }
-    }
 }

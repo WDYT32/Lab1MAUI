@@ -1,9 +1,7 @@
-using Microsoft.Extensions.Logging;
-using Lab1MAUI.Models.Schedule;
-using Lab1MAUI.Models.Schedule.Participants;
-using Lab1MAUI.Models.Schedule.Constraints;
+using Lab1MAUI.Models.MTM;
 using Lab1MAUI.ViewModels;
 using Lab1MAUI.Views;
+using Microsoft.Extensions.Logging;
 
 namespace Lab1MAUI;
 
@@ -21,11 +19,13 @@ public static class MauiProgram
             });
 
         // РЕЄСТРАЦІЯ DEPENDENCY INJECTION
-        
-        // 1. Єдиний стан моделі на всю програму
-        builder.Services.AddSingleton<Schedule>();
 
-        // 2. ViewModels
+        // 1. Єдиний стан UI — ScheduleMTM (Singleton).
+        //    Доменний Schedule більше не є Singleton:
+        //    він створюється заново при кожній генерації через ScheduleMTM.MapToModel().
+        builder.Services.AddSingleton<ScheduleMTM>();
+
+        // 2. ViewModels (Singleton — для списків, Transient — для сторінок редагування)
         builder.Services.AddSingleton<DashboardViewModel>();
         builder.Services.AddSingleton<TeachersViewModel>();
         builder.Services.AddSingleton<RoomsViewModel>();
