@@ -2,10 +2,10 @@ using Lab1MAUI.Models.Schedule.Constraints;
 
 namespace Lab1MAUI.Models.Schedule.Participants
 {
-    public class Teacher : IParticipant
+    public class Teacher(Guid id, string name, int totalCells) : IParticipant
     {
-        public Guid Id { get; }
-        public string Name { get; set; }
+        public Guid Id { get; } = id;
+        public string Name { get; set; } = name;
         public int TargetLessons { get; set; }
         
         private int _assignedLessons;
@@ -14,20 +14,11 @@ namespace Lab1MAUI.Models.Schedule.Participants
         public List<TeacherCompetence> Competences { get; } = new();
         public List<IConstraint> Constraints { get; } = new();
 
-        private readonly int _totalCells;
-        private readonly bool[] _bookedCells;
-
-        public Teacher(Guid id, string name, int totalCells)
-        {
-            Id = id;
-            Name = name;
-            _totalCells = totalCells;
-            _bookedCells = new bool[totalCells];
-        }
+        private readonly bool[] _bookedCells = new bool[totalCells];
 
         public bool[] GetAvailabilityMask()
         {
-            bool[] mask = new bool[_totalCells];
+            bool[] mask = new bool[totalCells];
             Array.Fill(mask, true);
 
             foreach (var constraint in Constraints)
@@ -35,7 +26,7 @@ namespace Lab1MAUI.Models.Schedule.Participants
                 constraint.Apply(mask);
             }
 
-            for (int i = 0; i < _totalCells; i++)
+            for (int i = 0; i < totalCells; i++)
             {
                 if (_bookedCells[i])
                 {

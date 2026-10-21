@@ -19,16 +19,10 @@ namespace Lab1MAUI.ViewModels.Edit
         TimeOff
     }
 
-    public class ConstraintTypeItem
+    public class ConstraintTypeItem(FormConstraintType type, string displayName)
     {
-        public FormConstraintType Type { get; }
-        public string DisplayName { get; }
-
-        public ConstraintTypeItem(FormConstraintType type, string displayName)
-        {
-            Type = type;
-            DisplayName = displayName;
-        }
+        public FormConstraintType Type { get; } = type;
+        public string DisplayName { get; } = displayName;
 
         public override string ToString() => DisplayName;
     }
@@ -36,7 +30,6 @@ namespace Lab1MAUI.ViewModels.Edit
     public class ConstraintFormViewModel : BaseViewModel
     {
         private readonly ConstraintOwnerType _ownerType;
-        private readonly ScheduleConfig _config;
 
         public event Action<IConstraintUI>? OnConstraintAdded;
 
@@ -80,10 +73,9 @@ namespace Lab1MAUI.ViewModels.Edit
 
         public ICommand AddConstraintCommand { get; }
 
-        public ConstraintFormViewModel(ConstraintOwnerType ownerType, ScheduleConfig config)
+        public ConstraintFormViewModel(ConstraintOwnerType ownerType)
         {
             _ownerType = ownerType;
-            _config = config;
 
             if (ownerType == ConstraintOwnerType.Teacher)
             {

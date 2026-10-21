@@ -1,26 +1,17 @@
 namespace Lab1MAUI.Models.Schedule.Constraints
 {
-    public class SpecificDayConstraint : IConstraint
+    public class SpecificDayConstraint(int[] allowedDays, int cellsPerDay) : IConstraint
     {
-        private readonly int[] _allowedDays;
-        private readonly int _cellsPerDay;
-
-        public SpecificDayConstraint(int[] allowedDays, int cellsPerDay)
-        {
-            _allowedDays = allowedDays;
-            _cellsPerDay = cellsPerDay;
-        }
-
         public void Apply(bool[] mask)
         {
-            int days = mask.Length / _cellsPerDay;
+            int days = mask.Length / cellsPerDay;
             for (int day = 0; day < days; day++)
             {
-                bool isAllowed = Array.IndexOf(_allowedDays, day) >= 0;
+                bool isAllowed = Array.IndexOf(allowedDays, day) >= 0;
                 if (!isAllowed)
                 {
-                    int start = day * _cellsPerDay;
-                    for (int i = 0; i < _cellsPerDay; i++)
+                    int start = day * cellsPerDay;
+                    for (int i = 0; i < cellsPerDay; i++)
                     {
                         mask[start + i] = false;
                     }

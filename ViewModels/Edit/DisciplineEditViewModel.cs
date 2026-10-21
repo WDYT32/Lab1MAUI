@@ -1,26 +1,16 @@
-using Lab1MAUI.Models.UI;
 using Lab1MAUI.Models.UI.Participants;
 
 namespace Lab1MAUI.ViewModels.Edit
 {
-    [QueryProperty(nameof(DisciplineId), "id")]
     public class DisciplineEditViewModel : BaseEditViewModel<DisciplineUI>
     {
-        public string DisciplineId { set => LoadEntityById(value); }
-
         public string Name
         {
             get;
             set => SetProperty(ref field, value);
         } = string.Empty;
 
-        public ConstraintsEditorViewModel ConstraintsEditor { get; }
-
-        public DisciplineEditViewModel(ScheduleUI scheduleUI)
-            : base(scheduleUI, scheduleUI.Disciplines)
-        {
-            ConstraintsEditor = new ConstraintsEditorViewModel(ConstraintOwnerType.Discipline, scheduleUI.Config);
-        }
+        public ConstraintsEditorViewModel ConstraintsEditor { get; } = new(ConstraintOwnerType.Discipline);
 
         protected override void LoadData(DisciplineUI entity)
         {

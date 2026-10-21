@@ -1,41 +1,33 @@
-using Lab1MAUI.Models.UI;
 using Lab1MAUI.Models.UI.Participants;
-using System.Collections.ObjectModel;
 using System.Windows.Input;
 
 namespace Lab1MAUI.ViewModels.Edit
 {
-    public abstract class BaseEditViewModel<TEntity> : BaseViewModel 
+    public abstract class BaseEditViewModel<TEntity> : BaseViewModel, IQueryAttributable
         where TEntity : class, IParticipantUI, new()
     {
-        protected readonly ScheduleUI ScheduleUI;
-        protected readonly ObservableCollection<TEntity> EntityCollection;
-
         public TEntity Entity { get; protected set; }
-        public bool IsNew { get; protected set; }
 
         public ICommand SaveCommand { get; }
+        public ICommand GoBackCommand { get; }
 
-        protected BaseEditViewModel(ScheduleUI scheduleUI, ObservableCollection<TEntity> entityCollection)
+        protected BaseEditViewModel()
         {
-            ScheduleUI = scheduleUI;
-            EntityCollection = entityCollection;
             Entity = new TEntity();
             SaveCommand = new Command(async () => await SaveAsync());
+            GoBackCommand = new Command(async () =>
+            {
+                if (Shell.Current != null)
+                    await Shell.Current.GoToAsync("..");
+            });
         }
 
-        public void LoadEntityById(string? value)
+        public virtual void ApplyQueryAttributes(IDictionary<string, object> query)
         {
-            if (value == "new")
+            if (query.TryGetValue("Entity", out var entityObj) && entityObj is TEntity entity)
             {
-                IsNew = true;
-                Entity = new TEntity();
-                LoadData(Entity);
-            }
-            else if (Guid.TryParse(value, out Guid id))
-            {
-                IsNew = false;
-                Entity = EntityCollection.FirstOrDefault(e => e.Id == id) ?? new TEntity();
+                query.Remove("Entity");
+                Entity = entity;
                 LoadData(Entity);
             }
         }
@@ -60,22 +52,14 @@ namespace Lab1MAUI.ViewModels.Edit
 
             ApplyData(Entity);
 
-            if (IsNew)
-            {
-                if (!EntityCollection.Contains(Entity))
-                    EntityCollection.Add(Entity);
-            }
-            else
-            {
-                var index = EntityCollection.IndexOf(Entity);
-                if (index >= 0)
-                    EntityCollection[index] = Entity;
-                else if (!EntityCollection.Contains(Entity))
-                    EntityCollection.Add(Entity);
-            }
-
             if (Shell.Current != null)
-                await Shell.Current.GoToAsync("..");
+            {
+                var navParams = new Dictionary<string, object>
+                {
+                    { "SavedItem", Entity }
+                };
+                await Shell.Current.GoToAsync("..", navParams);
+            }
         }
     }
 }

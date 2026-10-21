@@ -17,9 +17,9 @@ namespace Lab1MAUI.ViewModels.Edit
         public ICommand DragStartingConstraintCommand { get; }
         public ICommand DropConstraintCommand { get; }
 
-        public ConstraintsEditorViewModel(ConstraintOwnerType ownerType, ScheduleConfig config)
+        public ConstraintsEditorViewModel(ConstraintOwnerType ownerType)
         {
-            ConstraintForm = new ConstraintFormViewModel(ownerType, config);
+            ConstraintForm = new ConstraintFormViewModel(ownerType);
             ConstraintForm.OnConstraintAdded += c => Constraints.Add(c);
 
             DeleteConstraintCommand = new Command<IConstraintUI>(c =>

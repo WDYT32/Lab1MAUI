@@ -3,38 +3,27 @@ using System;
 
 namespace Lab1MAUI.Models.Schedule.Constraints
 {
-    public class DailyLimitConstraint : IConstraint
+    public class DailyLimitConstraint(IParticipant owner, int maxLessonsPerDay, int cellsPerDay) : IConstraint
     {
-        private readonly IParticipant _owner;
-        private readonly int _maxLessonsPerDay;
-        private readonly int _cellsPerDay;
-
-        public DailyLimitConstraint(IParticipant owner, int maxLessonsPerDay, int cellsPerDay)
-        {
-            _owner = owner;
-            _maxLessonsPerDay = maxLessonsPerDay;
-            _cellsPerDay = cellsPerDay;
-        }
-
         public void Apply(bool[] mask)
         {
-            int days = mask.Length / _cellsPerDay;
+            int days = mask.Length / cellsPerDay;
             for (int day = 0; day < days; day++)
             {
-                int start = day * _cellsPerDay;
+                int start = day * cellsPerDay;
                 
                 int bookedToday = 0;
-                for (int i = 0; i < _cellsPerDay; i++)
+                for (int i = 0; i < cellsPerDay; i++)
                 {
-                    if (_owner.IsBooked(start + i))
+                    if (owner.IsBooked(start + i))
                         bookedToday++;
                 }
 
-                if (bookedToday >= _maxLessonsPerDay)
+                if (bookedToday >= maxLessonsPerDay)
                 {
-                    for (int i = 0; i < _cellsPerDay; i++)
+                    for (int i = 0; i < cellsPerDay; i++)
                     {
-                        if (!_owner.IsBooked(start + i))
+                        if (!owner.IsBooked(start + i))
                             mask[start + i] = false;
                     }
                 }

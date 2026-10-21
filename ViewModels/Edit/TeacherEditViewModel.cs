@@ -5,10 +5,9 @@ using System.Windows.Input;
 
 namespace Lab1MAUI.ViewModels.Edit
 {
-    [QueryProperty(nameof(TeacherId), "id")]
     public class TeacherEditViewModel : BaseEditViewModel<TeacherUI>
     {
-        public string TeacherId { set => LoadEntityById(value); }
+        private readonly ScheduleUI _scheduleUI;
 
         public string FirstName
         {
@@ -42,10 +41,11 @@ namespace Lab1MAUI.ViewModels.Edit
         public ICommand DeleteCompetenceCommand { get; }
 
         public TeacherEditViewModel(ScheduleUI scheduleUI)
-            : base(scheduleUI, scheduleUI.Teachers)
         {
-            ConstraintsEditor = new ConstraintsEditorViewModel(ConstraintOwnerType.Teacher, scheduleUI.Config);
-            DisciplineSelection = new DisciplineSelectionViewModel(ScheduleUI);
+            _scheduleUI = scheduleUI;
+            ConstraintsEditor = new ConstraintsEditorViewModel(ConstraintOwnerType.Teacher);
+            DisciplineSelection = new DisciplineSelectionViewModel(scheduleUI);
+
             DisciplineSelection.OnDisciplineSelected += d =>
             {
                 if (Competences.All(c => c.DisciplineId != d.Id))
@@ -69,7 +69,7 @@ namespace Lab1MAUI.ViewModels.Edit
             Competences.Clear();
             foreach (var comp in entity.Competences)
             {
-                var disciplineName = ScheduleUI.Disciplines
+                var disciplineName = _scheduleUI.Disciplines
                     .FirstOrDefault(d => d.Id == comp.DisciplineId)?.Name ?? "Невідома дисципліна";
                 Competences.Add(new TeacherCompetenceItem(comp.DisciplineId, disciplineName));
             }
@@ -85,10 +85,10 @@ namespace Lab1MAUI.ViewModels.Edit
                 return false;
             }
 
-            if (TargetLessons > ScheduleUI.Config.TotalCells)
+            if (TargetLessons > _scheduleUI.Config.TotalCells)
             {
                 await ShowAlertAsync("Перевантаження",
-                    $"Цільова кількість занять ({TargetLessons}) перевищує фізично можливу кількість уроків на тиждень ({ScheduleUI.Config.TotalCells}).");
+                    $"Цільова кількість занять ({TargetLessons}) перевищує фізично можливу кількість уроків на тиждень ({_scheduleUI.Config.TotalCells}).");
                 return false;
             }
             return true;
@@ -109,15 +109,9 @@ namespace Lab1MAUI.ViewModels.Edit
         }
     }
 
-    public class TeacherCompetenceItem
+    public class TeacherCompetenceItem(Guid disciplineId, string disciplineName)
     {
-        public Guid DisciplineId { get; }
-        public string DisciplineName { get; }
-
-        public TeacherCompetenceItem(Guid disciplineId, string disciplineName)
-        {
-            DisciplineId = disciplineId;
-            DisciplineName = disciplineName;
-        }
+        public Guid DisciplineId { get; } = disciplineId;
+        public string DisciplineName { get; } = disciplineName;
     }
 }

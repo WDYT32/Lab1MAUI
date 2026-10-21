@@ -4,8 +4,8 @@ using System.Windows.Input;
 
 namespace Lab1MAUI.ViewModels
 {
-    public abstract class BaseListViewModel<TEntity> : BaseViewModel 
-        where TEntity : class, IParticipantUI
+    public abstract class BaseListViewModel<TEntity> : BaseViewModel, IQueryAttributable
+        where TEntity : class, IParticipantUI, new()
     {
         public ObservableCollection<TEntity> Items { get; }
         public string EditPageRoute { get; }
@@ -25,13 +25,23 @@ namespace Lab1MAUI.ViewModels
             AddCommand = new Command(async () =>
             {
                 if (Shell.Current != null)
-                    await Shell.Current.GoToAsync($"{EditPageRoute}?id=new");
+                {
+                    await Shell.Current.GoToAsync(EditPageRoute, new Dictionary<string, object>
+                    {
+                        { "Entity", new TEntity() }
+                    });
+                }
             });
 
             EditCommand = new Command<TEntity>(async (item) =>
             {
                 if (item != null && Shell.Current != null)
-                    await Shell.Current.GoToAsync($"{EditPageRoute}?id={item.Id}");
+                {
+                    await Shell.Current.GoToAsync(EditPageRoute, new Dictionary<string, object>
+                    {
+                        { "Entity", item }
+                    });
+                }
             });
 
             DeleteCommand = new Command<TEntity>((item) =>
@@ -53,6 +63,19 @@ namespace Lab1MAUI.ViewModels
                 }
                 _draggedItem = null;
             });
+        }
+
+        public virtual void ApplyQueryAttributes(IDictionary<string, object> query)
+        {
+            if (query.TryGetValue("SavedItem", out var itemObj) && itemObj is TEntity item)
+            {
+                query.Remove("SavedItem");
+                var index = Items.IndexOf(item);
+                if (index >= 0)
+                    Items[index] = item;
+                else
+                    Items.Add(item);
+            }
         }
     }
 }

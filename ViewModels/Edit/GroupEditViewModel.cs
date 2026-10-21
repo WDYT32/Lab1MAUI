@@ -5,10 +5,9 @@ using System.Windows.Input;
 
 namespace Lab1MAUI.ViewModels.Edit
 {
-    [QueryProperty(nameof(GroupId), "id")]
     public class GroupEditViewModel : BaseEditViewModel<StudentGroupUI>
     {
-        public string GroupId { set => LoadEntityById(value); }
+        private readonly ScheduleUI _scheduleUI;
 
         public string Name
         {
@@ -30,10 +29,11 @@ namespace Lab1MAUI.ViewModels.Edit
         public ICommand DeleteRequirementCommand { get; }
 
         public GroupEditViewModel(ScheduleUI scheduleUI)
-            : base(scheduleUI, scheduleUI.Groups)
         {
-            ConstraintsEditor = new ConstraintsEditorViewModel(ConstraintOwnerType.Group, scheduleUI.Config);
-            DisciplineSelection = new DisciplineSelectionViewModel(ScheduleUI);
+            _scheduleUI = scheduleUI;
+            ConstraintsEditor = new ConstraintsEditorViewModel(ConstraintOwnerType.Group);
+            DisciplineSelection = new DisciplineSelectionViewModel(scheduleUI);
+
             DisciplineSelection.OnDisciplineSelected += d =>
             {
                 if (!Requirements.Any(r => r.DisciplineId == d.Id))
@@ -55,7 +55,7 @@ namespace Lab1MAUI.ViewModels.Edit
             Requirements.Clear();
             foreach (var r in entity.Requirements)
             {
-                var disciplineName = ScheduleUI.Disciplines
+                var disciplineName = _scheduleUI.Disciplines
                     .FirstOrDefault(d => d.Id == r.DisciplineId)?.Name ?? "Невідома дисципліна";
                 Requirements.Add(new GroupRequirementItem(r.DisciplineId, disciplineName, r.RequiredLessons));
             }
@@ -72,10 +72,10 @@ namespace Lab1MAUI.ViewModels.Edit
             }
 
             int totalReqLessons = Requirements.Sum(r => r.RequiredLessons);
-            if (totalReqLessons > ScheduleUI.Config.TotalCells)
+            if (totalReqLessons > _scheduleUI.Config.TotalCells)
             {
                 await ShowAlertAsync("Перевантаження",
-                    $"Загальна кількість занять ({totalReqLessons}) перевищує фізично можливу кількість уроків на тиждень ({ScheduleUI.Config.TotalCells}).");
+                    $"Загальна кількість занять ({totalReqLessons}) перевищує фізично можливу кількість уроків на тиждень ({_scheduleUI.Config.TotalCells}).");
                 return false;
             }
             return true;
@@ -94,23 +94,17 @@ namespace Lab1MAUI.ViewModels.Edit
         }
     }
 
-    public class GroupRequirementItem : BaseViewModel
+    public class GroupRequirementItem(Guid disciplineId, string disciplineName, int requiredLessons)
+        : BaseViewModel
     {
-        public Guid DisciplineId { get; }
-        public string DisciplineName { get; }
+        public Guid DisciplineId { get; } = disciplineId;
+        public string DisciplineName { get; } = disciplineName;
 
-        private int _requiredLessons;
+        private int _requiredLessons = requiredLessons;
         public int RequiredLessons
         {
             get => _requiredLessons;
             set => SetProperty(ref _requiredLessons, value);
-        }
-
-        public GroupRequirementItem(Guid disciplineId, string disciplineName, int requiredLessons)
-        {
-            DisciplineId = disciplineId;
-            DisciplineName = disciplineName;
-            _requiredLessons = requiredLessons;
         }
     }
 }

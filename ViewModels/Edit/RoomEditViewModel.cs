@@ -1,13 +1,9 @@
-using Lab1MAUI.Models.UI;
 using Lab1MAUI.Models.UI.Participants;
 
 namespace Lab1MAUI.ViewModels.Edit
 {
-    [QueryProperty(nameof(RoomId), "id")]
     public class RoomEditViewModel : BaseEditViewModel<RoomUI>
     {
-        public string RoomId { set => LoadEntityById(value); }
-
         public string Name
         {
             get;
@@ -20,15 +16,14 @@ namespace Lab1MAUI.ViewModels.Edit
             set => SetProperty(ref field, value);
         } = 30;
 
-        public RoomEditViewModel(ScheduleUI scheduleUI)
-            : base(scheduleUI, scheduleUI.Rooms)
+        public RoomEditViewModel()
         {
         }
 
         protected override void LoadData(RoomUI entity)
         {
             Name = entity.Name;
-            Capacity = IsNew ? 30 : entity.Capacity;
+            Capacity = entity.Capacity;
         }
 
         protected override async Task<bool> ValidateBeforeSaveAsync()

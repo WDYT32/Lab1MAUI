@@ -54,12 +54,20 @@
 
             <views:ConstraintsEditorView />
 
-            <Button Text="Зберегти" 
-                    Command="{Binding SaveCommand}" 
-                    BackgroundColor="#4CAF50" 
-                    TextColor="White" 
-                    Margin="0,20,0,0"
-                    HeightRequest="50" />
+            <Grid ColumnDefinitions="*, *" ColumnSpacing="10" Margin="0,20,0,0">
+                <Button Grid.Column="0" 
+                        Text="Скасувати" 
+                        Command="{Binding GoBackCommand}" 
+                        BackgroundColor="#757575" 
+                        TextColor="White" 
+                        HeightRequest="50" />
+                <Button Grid.Column="1" 
+                        Text="Зберегти" 
+                        Command="{Binding SaveCommand}" 
+                        BackgroundColor="#4CAF50" 
+                        TextColor="White" 
+                        HeightRequest="50" />
+            </Grid>
 
         </VerticalStackLayout>
     </ScrollView>

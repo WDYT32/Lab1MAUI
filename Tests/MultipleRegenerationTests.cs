@@ -124,7 +124,7 @@ namespace Lab1MAUI.Tests
             Assert.Equal(2, slots1.Count);
             Assert.Contains(0, slots1);
 
-            var constraintForm = new ConstraintFormViewModel(ConstraintOwnerType.Teacher, ui.Config);
+            var constraintForm = new ConstraintFormViewModel(ConstraintOwnerType.Teacher);
             constraintForm.SelectType(FormConstraintType.TimeOff);
             constraintForm.TimeOffCellIndex = 0; 
 

@@ -3,18 +3,11 @@ using System;
 
 namespace Lab1MAUI.Models.Schedule.Constraints
 {
-    public class TimeOffConstraint : IConstraint
+    public class TimeOffConstraint(int[] unavailableCells) : IConstraint
     {
-        private readonly int[] _unavailableCells;
-
-        public TimeOffConstraint(int[] unavailableCells)
-        {
-            _unavailableCells = unavailableCells;
-        }
-
         public void Apply(bool[] mask)
         {
-            foreach (var cell in _unavailableCells)
+            foreach (var cell in unavailableCells)
             {
                 if (cell >= 0 && cell < mask.Length)
                     mask[cell] = false;

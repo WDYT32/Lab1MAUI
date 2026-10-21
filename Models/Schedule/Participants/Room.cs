@@ -1,22 +1,13 @@
 namespace Lab1MAUI.Models.Schedule.Participants
 {
-    public class Room : IParticipant
+    public class Room(Guid id, string name, int capacity, int totalCells)
+        : IParticipant
     {
-        public Guid Id { get; }
-        public string Name { get; set; }
-        public int Capacity { get; set; }
-        
-        private readonly int[] _reservedSeatsPerSlot;
-        private readonly int _totalCells;
+        public Guid Id { get; } = id;
+        public string Name { get; set; } = name;
+        public int Capacity { get; set; } = capacity;
 
-        public Room(Guid id, string name, int capacity, int totalCells)
-        {
-            Id = id;
-            Name = name;
-            Capacity = capacity;
-            _totalCells = totalCells;
-            _reservedSeatsPerSlot = new int[totalCells];
-        }
+        private readonly int[] _reservedSeatsPerSlot = new int[totalCells];
 
         private int _currentRequestStudents;
 
@@ -27,8 +18,8 @@ namespace Lab1MAUI.Models.Schedule.Participants
 
         public bool[] GetAvailabilityMask()
         {
-            bool[] mask = new bool[_totalCells];
-            for (int i = 0; i < _totalCells; i++)
+            bool[] mask = new bool[totalCells];
+            for (int i = 0; i < totalCells; i++)
             {
                 mask[i] = CanAccommodate(_currentRequestStudents, i);
             }

@@ -451,7 +451,7 @@ flowchart TD
    - Забезпечує стандартизоване копіювання правил при завантаженні та збереженні через методи `LoadFrom(...)` та `ApplyTo(...)`.
 
 3. **Уніфікований шар редагування (`BaseEditViewModel<TEntity>`)**:
-   - `BaseEditViewModel<TEntity>`: автоматизує обробку Shell `[QueryProperty]` для завантаження за ID або створення нового екземпляра (`"new"`), керує станом `IsNew`, надає гачок асинхронної валідації `ValidateBeforeSaveAsync()`, синхронізацію в колекції `ScheduleUI` та зворотну навігацію `..`. 
+   - `BaseEditViewModel<TEntity>`: реалізує `IQueryAttributable`, приймає об'єкт безпосередньо через словник параметрів навігації (`"Entity"`), надає гачок асинхронної валідації `ValidateBeforeSaveAsync()` та повертає результат списковій моделі через `Shell.Current.GoToAsync("..", navParams)`. Моделі редагування повністю відв'язані від прямого збереження посилань на `ScheduleUI` для своєї сутності.
    - Моделі редагування (`TeacherEditViewModel`, `GroupEditViewModel`, `DisciplineEditViewModel`, `RoomEditViewModel`) напряму наслідують `BaseEditViewModel<TEntity>`, утворюючи просту пласку ієрархію без проміжних класів, та використовують композицію з дочірніми компонентами `ConstraintsEditorViewModel` і `DisciplineSelectionViewModel`.
    - **Структура папок**: Усі класи редагування, базові моделі та форми винесені в окрему підпапку `ViewModels/Edit/` (простір імен `Lab1MAUI.ViewModels.Edit`), а відповідні XAML-сторінки редагування — у підпапку `Views/Edit/` (простір імен `Lab1MAUI.Views.Edit`). Спискові сторінки учасників згруповані у підпапку `Views/Participants/` (простір імен `Lab1MAUI.Views.Participants`) за аналогією до `ViewModels/Participants/` та `Models/UI/Participants/`, тоді як у коренях `ViewModels/` та `Views/` залишаються головні сторінкові компоненти.
 
@@ -477,6 +477,11 @@ classDiagram
         #SetProperty~T~(ref T backingStore, T value, string propertyName) bool
     }
 
+    class IQueryAttributable {
+        <<interface>>
+        +ApplyQueryAttributes(IDictionary~string, object~ query) void
+    }
+
     class BaseListViewModel~TEntity~ {
         <<abstract>>
         +ObservableCollection~TEntity~ Items
@@ -486,16 +491,15 @@ classDiagram
         +ICommand DeleteCommand
         +ICommand DragStartingCommand
         +ICommand DropCommand
+        +ApplyQueryAttributes(IDictionary~string, object~ query) void
     }
 
     class BaseEditViewModel~TEntity~ {
         <<abstract>>
-        #ScheduleUI ScheduleUI
-        #ObservableCollection~TEntity~ EntityCollection
         +TEntity Entity
-        +bool IsNew
         +ICommand SaveCommand
-        +LoadEntityById(string value) void
+        +ICommand GoBackCommand
+        +ApplyQueryAttributes(IDictionary~string, object~ query) void
         #LoadData(TEntity entity)*
         #ApplyData(TEntity entity)*
         #ValidateBeforeSaveAsync()* Task~bool~
@@ -532,7 +536,7 @@ classDiagram
     
     class DisciplineEditViewModel {
         +string Name
-        +string DisciplineId
+        +ConstraintsEditorViewModel ConstraintsEditor
     }
 
     class RoomsViewModel
@@ -540,7 +544,6 @@ classDiagram
     class RoomEditViewModel {
         +string Name
         +int Capacity
-        +string RoomId
     }
 
     class TeachersViewModel
@@ -550,7 +553,6 @@ classDiagram
         +string LastName
         +string Patronymic
         +int TargetLessons
-        +string TeacherId
         +ObservableCollection~TeacherCompetenceItem~ Competences
         +ICommand AddCompetenceCommand
         +ICommand DeleteCompetenceCommand
@@ -561,7 +563,6 @@ classDiagram
     class GroupEditViewModel {
         +string Name
         +int StudentsCount
-        +string GroupId
         +ObservableCollection~GroupRequirementItem~ Requirements
         +ICommand AddRequirementCommand
         +ICommand DeleteRequirementCommand
@@ -621,11 +622,44 @@ classDiagram
     ConstraintsEditorViewModel *-- ConstraintFormViewModel
     TeacherEditViewModel *-- DisciplineSelectionViewModel
     GroupEditViewModel *-- DisciplineSelectionViewModel
+
+    %% Реалізація IQueryAttributable для маршрутизації Shell
+    IQueryAttributable <|.. BaseListViewModel
+    IQueryAttributable <|.. BaseEditViewModel
 ```
+
+## Лабораторна робота №2: Команди та навігація у .NET MAUI Shell
+
+У рамках другої лабораторної роботи реалізовано повноцінну навігацію на основі URI-маршрутів у **.NET MAUI Shell** відповідно до патерну MVVM:
+
+### 1. Маршрутизація та реєстрація сторінок (`AppShell`)
+- Усі сторінки редагування (`TeacherEditPage`, `GroupEditPage`, `DisciplineEditPage`, `RoomEditPage`) зареєстровані через `Routing.RegisterRoute(...)` в `AppShell.xaml.cs`.
+- Основні сторінки списків доступні як таби/елементи `TabBar` у Shell.
+
+### 2. Реалізація команд (`ICommand`) та навігації
+- Переходи виконуються суто через `ICommand` (`AddCommand`, `EditCommand`, `SaveCommand`, `GoBackCommand`) без коду обробників у code-behind.
+- Додавання сутності: `Shell.Current.GoToAsync(EditPageRoute, new ShellNavigationQueryParameters { { "Entity", new TEntity() } })`.
+- Редагування: передача посилання на об'єкт безпосередньо через словник навігації `new ShellNavigationQueryParameters { { "Entity", item } }` (без зайвої серіалізації в JSON чи текстові рядки).
+
+### 3. Прийом параметрів через `IQueryAttributable`
+- `BaseEditViewModel<TEntity>` реалізує `IQueryAttributable.ApplyQueryAttributes(IDictionary<string, object> query)`. Приймає сутність через `query["Entity"]` та ініціалізує форму редагування.
+- Редагувальні моделі фокусуються лише на одній сутності, без потреби знати чи вона створена заново, чи редагується існуюча.
+- `DisciplineEditViewModel` не має залежності від `ScheduleUI`, що суттєво спрощує її життєвий цикл.
+
+### 4. Зворотна навігація та повернення даних
+- **Скасування редагування**: реалізовано `GoBackCommand`, що викликає `Shell.Current.GoToAsync("..")` для безпечного повернення назад по стеку без збереження змін.
+- **Збереження даних**: `SaveCommand` здійснює валідацію введених даних (з виведенням `Shell.Current.DisplayAlertAsync`), формує оновлений об'єкт і повертає його списковій моделі через:
+  ```csharp
+  await Shell.Current.GoToAsync("..", new ShellNavigationQueryParameters
+  {
+      { "SavedItem", Entity }
+  });
+  ```
+- `BaseListViewModel<TEntity>` реалізує `IQueryAttributable`, отримує `"SavedItem"`. Якщо елемент вже присутній у списку (`Items.IndexOf(item) >= 0`), він оновлюється на відповідній позиції; якщо це новий екземпляр — додається до колекції.
 
 ## Покриття Тестами (Testing Suite)
 
-Проєкт містить 51 автоматизований xUnit тест, що гарантує надійність алгоритму та архітектури.
+Проєкт містить **57 автоматизованих xUnit тестів**, що гарантують надійність алгоритму та архітектури:
 
 1. **Базові тести алгоритму (`FunctionalAlgorithmTests`, `ScheduleGenerationTests`, `ScheduleTests`)**: Перевіряють здатність алгоритму заповнювати сітку без конфліктів, розпізнавати нестачу аудиторій, перевіряти місткість та обробляти базові прив'язки й розмірності.
 2. **Ізольовані обмеження (`IndividualConstraintTests`, `ConstraintTests`)**: Тестують поведінку `DailyLimit`, `MaxConsecutive`, `SpecificDay`, `SpecificTime` та `TimeOff` незалежно для кожного типу учасника.
@@ -634,4 +668,6 @@ classDiagram
    - Динаміка "пляшкових горлечок" (bottlenecks) через нестачу кімнат чи годин викладача.
    - Екстремальні значення та граничні випадки (напр. ліміт 0 уроків на день, заборона ставити підряд в умовах короткого дня, неможливі вимоги).
    - Масштабні стрес-тести (100+ уроків, 10 груп, 10 викладачів).
-4. **Тести інфраструктури UI Models (`ViewModelIntegrationTests`, `MultipleRegenerationTests`)**: Перевіряють, що багаторазова регенерація розкладу через UI-прошарок не залишає "брудного стану" (сміттєві лічильники годин, хибні маски) між натисканнями кнопки.
+4. **Тести інфраструктури UI Models та навігації (`ViewModelIntegrationTests`, `MultipleRegenerationTests`)**:
+   - Перевіряють, що багаторазова регенерація розкладу через UI-прошарок не залишає "брудного стану" (сміттєві лічильники годин, хибні маски).
+   - Перевіряють маршрутизацію та обробку параметрів `IQueryAttributable` у `BaseEditViewModel` та `BaseListViewModel` (передача сутностей, додавання, оновлення у списках, робота `GoBackCommand`).

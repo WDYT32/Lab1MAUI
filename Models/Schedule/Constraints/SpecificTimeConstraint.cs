@@ -3,26 +3,17 @@ using System;
 
 namespace Lab1MAUI.Models.Schedule.Constraints
 {
-    public class SpecificTimeConstraint : IConstraint
+    public class SpecificTimeConstraint(int[] allowedCellsInDay, int cellsPerDay) : IConstraint
     {
-        private readonly int[] _allowedCellsInDay;
-        private readonly int _cellsPerDay;
-
-        public SpecificTimeConstraint(int[] allowedCellsInDay, int cellsPerDay)
-        {
-            _allowedCellsInDay = allowedCellsInDay;
-            _cellsPerDay = cellsPerDay;
-        }
-
         public void Apply(bool[] mask)
         {
-            int days = mask.Length / _cellsPerDay;
+            int days = mask.Length / cellsPerDay;
             for (int day = 0; day < days; day++)
             {
-                int start = day * _cellsPerDay;
-                for (int i = 0; i < _cellsPerDay; i++)
+                int start = day * cellsPerDay;
+                for (int i = 0; i < cellsPerDay; i++)
                 {
-                    if (Array.IndexOf(_allowedCellsInDay, i) < 0)
+                    if (Array.IndexOf(allowedCellsInDay, i) < 0)
                     {
                         mask[start + i] = false;
                     }
