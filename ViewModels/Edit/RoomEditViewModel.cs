@@ -31,9 +31,21 @@ namespace Lab1MAUI.ViewModels.Edit
             Capacity = IsNew ? 30 : entity.Capacity;
         }
 
-        protected override Task<bool> ValidateBeforeSaveAsync()
+        protected override async Task<bool> ValidateBeforeSaveAsync()
         {
-            return Task.FromResult(!string.IsNullOrWhiteSpace(Name));
+            if (string.IsNullOrWhiteSpace(Name))
+            {
+                await ShowAlertAsync("Помилка валідації", "Будь ласка, вкажіть назву аудиторії.");
+                return false;
+            }
+
+            if (Capacity <= 0)
+            {
+                await ShowAlertAsync("Помилка валідації", "Місткість аудиторії повинна бути більшою за 0.");
+                return false;
+            }
+
+            return true;
         }
 
         protected override void ApplyData(RoomUI entity)

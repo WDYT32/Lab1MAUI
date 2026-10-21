@@ -28,14 +28,14 @@ namespace Lab1MAUI.ViewModels.Edit
             set => SetProperty(ref field, value);
         } = string.Empty;
 
-        public int TargetHours
+        public int TargetLessons
         {
             get;
             set => SetProperty(ref field, value);
         }
 
         public ConstraintsEditorViewModel ConstraintsEditor { get; }
-        public DisciplineSelectionViewModel DisciplineSelection { get; private set; }
+        public DisciplineSelectionViewModel DisciplineSelection { get; }
         public ObservableCollection<TeacherCompetenceItem> Competences { get; } = new();
 
         public ICommand AddCompetenceCommand { get; }
@@ -48,7 +48,7 @@ namespace Lab1MAUI.ViewModels.Edit
             DisciplineSelection = new DisciplineSelectionViewModel(ScheduleUI);
             DisciplineSelection.OnDisciplineSelected += d =>
             {
-                if (!Competences.Any(c => c.DisciplineId == d.Id))
+                if (Competences.All(c => c.DisciplineId != d.Id))
                     Competences.Add(new TeacherCompetenceItem(d.Id, d.Name));
             };
 
@@ -64,7 +64,7 @@ namespace Lab1MAUI.ViewModels.Edit
             LastName   = entity.LastName;
             FirstName  = entity.FirstName;
             Patronymic = entity.Patronymic;
-            TargetHours = entity.TargetHours;
+            TargetLessons = entity.TargetLessons;
 
             Competences.Clear();
             foreach (var comp in entity.Competences)
@@ -79,14 +79,16 @@ namespace Lab1MAUI.ViewModels.Edit
 
         protected override async Task<bool> ValidateBeforeSaveAsync()
         {
-            if (TargetHours > ScheduleUI.Config.TotalCells)
+            if (string.IsNullOrWhiteSpace(LastName) || string.IsNullOrWhiteSpace(FirstName))
             {
-                if (Application.Current?.MainPage != null)
-                {
-                    await Application.Current.MainPage.DisplayAlert("Перевантаження",
-                        $"Цільові години ({TargetHours}) перевищують фізично можливу кількість годин на тиждень ({ScheduleUI.Config.TotalCells}).",
-                        "ОК");
-                }
+                await ShowAlertAsync("Помилка валідації", "Будь ласка, заповніть прізвище та ім'я викладача.");
+                return false;
+            }
+
+            if (TargetLessons > ScheduleUI.Config.TotalCells)
+            {
+                await ShowAlertAsync("Перевантаження",
+                    $"Цільова кількість занять ({TargetLessons}) перевищує фізично можливу кількість уроків на тиждень ({ScheduleUI.Config.TotalCells}).");
                 return false;
             }
             return true;
@@ -97,7 +99,7 @@ namespace Lab1MAUI.ViewModels.Edit
             entity.LastName = LastName;
             entity.FirstName = FirstName;
             entity.Patronymic = Patronymic;
-            entity.TargetHours = TargetHours;
+            entity.TargetLessons = TargetLessons;
 
             entity.Competences.Clear();
             foreach (var c in Competences)

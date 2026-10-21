@@ -24,12 +24,12 @@ namespace Lab1MAUI.Tests
             
             for (int i = 0; i < 3; i++)
             {
-                var t = new Teacher(Guid.NewGuid(), $"T{i}", 1) { TargetHours = 1 };
+                var t = new Teacher(Guid.NewGuid(), $"T{i}", 1) { TargetLessons = 1 };
                 t.Competences.Add(new TeacherCompetence { DisciplineId = math.Id });
                 schedule.Teachers.Add(t);
 
                 var g = new StudentGroup(Guid.NewGuid(), $"G{i}", 1) { StudentsCount = 20 };
-                g.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredHours = 1 });
+                g.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredLessons = 1 });
                 schedule.Groups.Add(g);
             }
 
@@ -61,13 +61,13 @@ namespace Lab1MAUI.Tests
             schedule.Disciplines.Add(physics);
             schedule.Rooms.Add(new Room(Guid.NewGuid(), "101", 30, 8));
             
-            var t1 = new Teacher(Guid.NewGuid(), "Einstein", 8) { TargetHours = 10 };
+            var t1 = new Teacher(Guid.NewGuid(), "Einstein", 8) { TargetLessons = 10 };
             t1.Competences.Add(new TeacherCompetence { DisciplineId = physics.Id });
             schedule.Teachers.Add(t1);
 
             var g1 = new StudentGroup(Guid.NewGuid(), "G1", 8) { StudentsCount = 20 };
             
-            g1.Requirements.Add(new GroupRequirement { DisciplineId = physics.Id, RequiredHours = 4 });
+            g1.Requirements.Add(new GroupRequirement { DisciplineId = physics.Id, RequiredLessons = 4 });
             schedule.Groups.Add(g1);
 
             schedule.Generate();
@@ -105,7 +105,7 @@ namespace Lab1MAUI.Tests
             schedule.Disciplines.Add(math);
             schedule.Rooms.Add(new Room(Guid.NewGuid(), "101", 30, 4));
 
-            var t1 = new Teacher(Guid.NewGuid(), "T1", 4) { TargetHours = 5 };
+            var t1 = new Teacher(Guid.NewGuid(), "T1", 4) { TargetLessons = 5 };
             t1.Competences.Add(new TeacherCompetence { DisciplineId = math.Id });
             
             t1.Constraints.Add(new TimeOffConstraint(new[] { 1 }));
@@ -113,7 +113,7 @@ namespace Lab1MAUI.Tests
 
             var g1 = new StudentGroup(Guid.NewGuid(), "G1", 4) { StudentsCount = 20 };
             
-            g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredHours = 2 });
+            g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredLessons = 2 });
             
             g1.Constraints.Add(new SpecificDayConstraint(new[] { 0 }, 2));
             schedule.Groups.Add(g1);
@@ -155,7 +155,7 @@ namespace Lab1MAUI.Tests
             
             for (int i = 0; i < 10; i++)
             {
-                var t = new Teacher(Guid.NewGuid(), $"T_{i}", 25) { TargetHours = 25 };
+                var t = new Teacher(Guid.NewGuid(), $"T_{i}", 25) { TargetLessons = 25 };
                 
                 t.Competences.Add(new TeacherCompetence { DisciplineId = disciplines[i / 2].Id });
                 schedule.Teachers.Add(t);
@@ -167,7 +167,7 @@ namespace Lab1MAUI.Tests
                 var g = new StudentGroup(Guid.NewGuid(), $"G_{i}", 25) { StudentsCount = 20 };
                 foreach (var d in disciplines)
                 {
-                    g.Requirements.Add(new GroupRequirement { DisciplineId = d.Id, RequiredHours = 2 });
+                    g.Requirements.Add(new GroupRequirement { DisciplineId = d.Id, RequiredLessons = 2 });
                 }
                 schedule.Groups.Add(g);
             }
@@ -186,7 +186,7 @@ namespace Lab1MAUI.Tests
             {
                 foreach (var req in g.Requirements)
                 {
-                    Assert.Equal(2, req.FulfilledHours);
+                    Assert.Equal(2, req.FulfilledLessons);
                 }
             }
         }

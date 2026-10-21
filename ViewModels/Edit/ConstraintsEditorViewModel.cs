@@ -7,18 +7,11 @@ namespace Lab1MAUI.ViewModels.Edit
 {
     public class ConstraintsEditorViewModel : BaseViewModel
     {
-        private readonly ConstraintOwnerType _ownerType;
-        private readonly ScheduleConfig _config;
         private IConstraintUI? _draggedConstraint;
 
         public ObservableCollection<IConstraintUI> Constraints { get; } = new();
 
-        private ConstraintFormViewModel _constraintForm;
-        public ConstraintFormViewModel ConstraintForm
-        {
-            get => _constraintForm;
-            private set => SetProperty(ref _constraintForm, value);
-        }
+        public ConstraintFormViewModel ConstraintForm { get; }
 
         public ICommand DeleteConstraintCommand { get; }
         public ICommand DragStartingConstraintCommand { get; }
@@ -26,11 +19,8 @@ namespace Lab1MAUI.ViewModels.Edit
 
         public ConstraintsEditorViewModel(ConstraintOwnerType ownerType, ScheduleConfig config)
         {
-            _ownerType = ownerType;
-            _config = config;
-
-            _constraintForm = new ConstraintFormViewModel(ownerType, config);
-            _constraintForm.OnConstraintAdded += c => Constraints.Add(c);
+            ConstraintForm = new ConstraintFormViewModel(ownerType, config);
+            ConstraintForm.OnConstraintAdded += c => Constraints.Add(c);
 
             DeleteConstraintCommand = new Command<IConstraintUI>(c =>
             {
@@ -59,8 +49,7 @@ namespace Lab1MAUI.ViewModels.Edit
             foreach (var c in constraints)
                 Constraints.Add(c);
 
-            ConstraintForm = new ConstraintFormViewModel(_ownerType, _config);
-            ConstraintForm.OnConstraintAdded += c => Constraints.Add(c);
+            ConstraintForm.Reset();
         }
 
         public void ApplyTo(ICollection<IConstraintUI> target)

@@ -1,5 +1,4 @@
 using Lab1MAUI.Models.UI.Participants;
-using Microsoft.Maui.Controls;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 

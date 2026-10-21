@@ -5,6 +5,7 @@ using Lab1MAUI.ViewModels.Edit;
 using Lab1MAUI.ViewModels.Participants;
 using Lab1MAUI.Views;
 using Lab1MAUI.Views.Edit;
+using Lab1MAUI.Views.Participants;
 using Microsoft.Extensions.Logging;
 
 namespace Lab1MAUI;

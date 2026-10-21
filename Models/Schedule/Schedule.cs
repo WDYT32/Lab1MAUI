@@ -36,7 +36,7 @@ namespace Lab1MAUI.Models.Schedule
             {
                 
                 foreach (var c in _grid) c.Clear();
-                foreach (var g in Groups) { g.ClearBookings(); foreach (var req in g.Requirements) req.FulfilledHours = 0; }
+                foreach (var g in Groups) { g.ClearBookings(); foreach (var req in g.Requirements) req.FulfilledLessons = 0; }
                 foreach (var t in Teachers) { t.ClearBookings(); }
                 foreach (var r in Rooms) { r.ClearBookings(); }
                 foreach (var d in Disciplines) { d.ClearBookings(); }
@@ -53,7 +53,7 @@ namespace Lab1MAUI.Models.Schedule
                     r.ReserveSeats(g.StudentsCount, lesson.CellIndex);
                     d.BookSlot(lesson.CellIndex, g.Id);
 
-                    g.Requirements.First(req => req.DisciplineId == d.Id).FulfilledHours++;
+                    g.Requirements.First(req => req.DisciplineId == d.Id).FulfilledLessons++;
                     _grid[lesson.CellIndex].Add(lesson);
                 }
             }
@@ -119,7 +119,7 @@ namespace Lab1MAUI.Models.Schedule
 
         private IEnumerable<Teacher> FilterTeachers(Discipline disc, StudentGroup group)
         {
-            return Teachers.Where(t => t.CanTeach(disc) && t.CanTakeMoreHours());
+            return Teachers.Where(t => t.CanTeach(disc) && t.CanTakeMoreLessons());
         }
 
         private IEnumerable<Room> FilterRooms(Discipline disc, StudentGroup group)
@@ -169,7 +169,7 @@ namespace Lab1MAUI.Models.Schedule
             
             
             var req = g.Requirements.First(req => req.DisciplineId == d.Id);
-            req.FulfilledHours++;
+            req.FulfilledLessons++;
 
             
             _grid[slot].Add(lesson);
@@ -192,7 +192,7 @@ namespace Lab1MAUI.Models.Schedule
 
             
             var req = g.Requirements.First(req => req.DisciplineId == lesson.DisciplineId);
-            req.FulfilledHours--;
+            req.FulfilledLessons--;
 
             
             _grid[lesson.CellIndex].Remove(lesson);

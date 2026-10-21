@@ -65,12 +65,12 @@ namespace Lab1MAUI.Tests
             vm.FirstName = "John";
             vm.LastName = "Doe";
             vm.Patronymic = "Smith";
-            vm.TargetHours = 2;
+            vm.TargetLessons = 2;
             vm.SaveCommand.Execute(null);
 
             Assert.Single(ui.Teachers);
             Assert.Equal("Doe John Smith", ui.Teachers[0].Name);
-            Assert.Equal(2, ui.Teachers[0].TargetHours);
+            Assert.Equal(2, ui.Teachers[0].TargetLessons);
         }
 
         [Fact]

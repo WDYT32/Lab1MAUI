@@ -45,6 +45,12 @@ namespace Lab1MAUI.ViewModels.Edit
 
         protected virtual Task<bool> ValidateBeforeSaveAsync() => Task.FromResult(true);
 
+        protected async Task ShowAlertAsync(string title, string message)
+        {
+            if (Shell.Current != null)
+                await Shell.Current.DisplayAlertAsync(title, message, "ОК");
+        }
+
         protected virtual async Task SaveAsync()
         {
             if (Entity == null) return;

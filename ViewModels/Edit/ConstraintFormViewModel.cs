@@ -31,18 +31,6 @@ namespace Lab1MAUI.ViewModels.Edit
         }
 
         public override string ToString() => DisplayName;
-
-        public static implicit operator ConstraintTypeItem?(string? name)
-        {
-            if (string.IsNullOrWhiteSpace(name)) return null;
-            if (name.Contains("DailyLimit", StringComparison.OrdinalIgnoreCase))
-                return new ConstraintTypeItem(FormConstraintType.DailyLimit, name);
-            if (name.Contains("MaxConsecutive", StringComparison.OrdinalIgnoreCase))
-                return new ConstraintTypeItem(FormConstraintType.MaxConsecutive, name);
-            if (name.Contains("TimeOff", StringComparison.OrdinalIgnoreCase))
-                return new ConstraintTypeItem(FormConstraintType.TimeOff, name);
-            return null;
-        }
     }
 
     public class ConstraintFormViewModel : BaseViewModel
@@ -136,6 +124,14 @@ namespace Lab1MAUI.ViewModels.Edit
         public void SelectType(FormConstraintType type)
         {
             SelectedConstraintType = ConstraintTypes.FirstOrDefault(c => c.Type == type);
+        }
+
+        public void Reset()
+        {
+            SelectedConstraintType = null;
+            DailyLimitValue = 3;
+            MaxConsecutiveValue = 2;
+            TimeOffCellIndex = 0;
         }
     }
 }

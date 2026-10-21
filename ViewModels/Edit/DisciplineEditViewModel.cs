@@ -28,9 +28,14 @@ namespace Lab1MAUI.ViewModels.Edit
             ConstraintsEditor.LoadFrom(entity.Constraints);
         }
 
-        protected override Task<bool> ValidateBeforeSaveAsync()
+        protected override async Task<bool> ValidateBeforeSaveAsync()
         {
-            return Task.FromResult(!string.IsNullOrWhiteSpace(Name));
+            if (string.IsNullOrWhiteSpace(Name))
+            {
+                await ShowAlertAsync("Помилка валідації", "Будь ласка, вкажіть назву дисципліни.");
+                return false;
+            }
+            return true;
         }
 
         protected override void ApplyData(DisciplineUI entity)

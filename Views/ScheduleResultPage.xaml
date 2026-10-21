@@ -15,7 +15,7 @@
                         <VerticalStackLayout Spacing="5">
                             <Label Text="{Binding SubjectName, StringFormat='Дисципліна: {0}'}" FontSize="16" FontAttributes="Bold" TextColor="Black" />
                             <Label Text="{Binding GroupName, StringFormat='Група: {0}'}" FontSize="14" TextColor="DarkGray" />
-                            <Label Text="{Binding Hours, StringFormat='Нерозподілено уроків: {0}'}" FontSize="14" TextColor="Red" />
+                            <Label Text="{Binding LessonsCount, StringFormat='Нерозподілено уроків: {0}'}" FontSize="14" TextColor="Red" />
                             <Label Text="{Binding TotalMinutes, StringFormat='Всього часу: {0} хв'}" FontSize="14" TextColor="Red" />
                         </VerticalStackLayout>
                     </Border>

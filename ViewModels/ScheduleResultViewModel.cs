@@ -47,7 +47,7 @@ public class ScheduleResultViewModel : BaseViewModel
                     l.StudentGroupId == groupUI.Id &&
                     l.DisciplineId == reqUI.DisciplineId);
 
-                int unassigned = reqUI.RequiredHours - placed;
+                int unassigned = reqUI.RequiredLessons - placed;
                 if (unassigned <= 0) continue;
 
                 var disciplineName = _scheduleUI.Disciplines
@@ -55,9 +55,9 @@ public class ScheduleResultViewModel : BaseViewModel
 
                 UnassignedLessons.Add(new UnassignedDisplay
                 {
-                    SubjectName = disciplineName,
-                    GroupName   = groupUI.Name,
-                    Hours       = unassigned,
+                    SubjectName  = disciplineName,
+                    GroupName    = groupUI.Name,
+                    LessonsCount = unassigned,
                     TotalMinutes = unassigned * schedule.Config.LessonDurationMinutes
                 });
             }
@@ -121,9 +121,9 @@ public class ScheduleResultViewModel : BaseViewModel
 
 public class UnassignedDisplay
 {
-    public string SubjectName { get; set; }
-    public string GroupName { get; set; }
-    public int Hours { get; set; }
+    public string SubjectName { get; set; } = string.Empty;
+    public string GroupName { get; set; } = string.Empty;
+    public int LessonsCount { get; set; }
     public int TotalMinutes { get; set; }
 }
 

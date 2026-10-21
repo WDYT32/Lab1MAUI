@@ -1,11 +1,11 @@
 using Microsoft.Maui.Controls;
 using Lab1MAUI.ViewModels.Participants;
 
-namespace Lab1MAUI.Views;
+namespace Lab1MAUI.Views.Participants;
 
-public partial class RoomsPage : ContentPage
+public partial class StudentGroupsPage : ContentPage
 {
-    public RoomsPage(RoomsViewModel viewModel)
+    public StudentGroupsPage(StudentGroupsViewModel viewModel)
     {
         InitializeComponent();
         BindingContext = viewModel;

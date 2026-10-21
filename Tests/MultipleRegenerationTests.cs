@@ -26,9 +26,9 @@ namespace Lab1MAUI.Tests
             return d;
         }
 
-        private static TeacherUI AddTeacher(ScheduleUI ui, string name, int targetHours, params DisciplineUI[] competences)
+        private static TeacherUI AddTeacher(ScheduleUI ui, string name, int targetLessons, params DisciplineUI[] competences)
         {
-            var t = new TeacherUI { Id = Guid.NewGuid(), Name = name, TargetHours = targetHours };
+            var t = new TeacherUI { Id = Guid.NewGuid(), Name = name, TargetLessons = targetLessons };
             foreach (var d in competences)
                 t.Competences.Add(new TeacherCompetenceUI { DisciplineId = d.Id });
             ui.Teachers.Add(t);
@@ -43,42 +43,38 @@ namespace Lab1MAUI.Tests
         }
 
         private static StudentGroupUI AddGroup(ScheduleUI ui, string name, int studentsCount,
-            params (DisciplineUI disc, int hours)[] requirements)
+            params (DisciplineUI disc, int lessons)[] requirements)
         {
             var g = new StudentGroupUI { Id = Guid.NewGuid(), Name = name, StudentsCount = studentsCount };
-            foreach (var (disc, hours) in requirements)
-                g.Requirements.Add(new GroupRequirementUI { DisciplineId = disc.Id, RequiredHours = hours });
+            foreach (var (disc, lessons) in requirements)
+                g.Requirements.Add(new GroupRequirementUI { DisciplineId = disc.Id, RequiredLessons = lessons });
             ui.Groups.Add(g);
             return g;
         }
 
         [Fact]
-        public void Regeneration_DomainStateIsClean_FulfilledHoursAndAssignedHoursDoNotAccumulate()
+        public void Regeneration_DomainStateIsClean_FulfilledLessonsAndAssignedLessonsDoNotAccumulate()
         {
             var ui = CreateBaseUI();
             var math = AddDiscipline(ui, "Math");
-            var teacher = AddTeacher(ui, "Smith", targetHours: 5, math);
+            var teacher = AddTeacher(ui, "Smith", targetLessons: 5, math);
             AddRoom(ui, "101");
             var group = AddGroup(ui, "G1", 25, (math, 2));
 
-            bool ok1 = ui.TryGenerate(out _);
-            var result1 = ui.LastResult;
+            var result1 = ui.Generate();
 
-            Assert.True(ok1, "Перша генерація повинна бути успішною");
             var placed1 = result1.Grid.SelectMany(c => c).ToList();
             Assert.Equal(2, placed1.Count);
 
             var domainGroup1  = result1.Groups.First(g => g.Id == group.Id);
             var domainTeach1  = result1.Teachers.First(t => t.Id == teacher.Id);
-            Assert.Equal(2, domainGroup1.Requirements.First().FulfilledHours); 
-            Assert.Equal(2, domainTeach1.AssignedHours);                       
+            Assert.Equal(2, domainGroup1.Requirements.First().FulfilledLessons); 
+            Assert.Equal(2, domainTeach1.AssignedLessons);                       
 
-            group.Requirements[0].RequiredHours = 3;
+            group.Requirements[0].RequiredLessons = 3;
 
-            bool ok2 = ui.TryGenerate(out _);
-            var result2 = ui.LastResult;
+            var result2 = ui.Generate();
 
-            Assert.True(ok2, "Друга генерація повинна бути успішною");
             Assert.NotSame(result1, result2); 
 
             var placed2 = result2.Grid.SelectMany(c => c).ToList();
@@ -87,8 +83,8 @@ namespace Lab1MAUI.Tests
 
             var domainGroup2  = result2.Groups.First(g => g.Id == group.Id);
             var domainTeach2  = result2.Teachers.First(t => t.Id == teacher.Id);
-            Assert.Equal(3, domainGroup2.Requirements.First().FulfilledHours); 
-            Assert.Equal(3, domainTeach2.AssignedHours);                       
+            Assert.Equal(3, domainGroup2.Requirements.First().FulfilledLessons); 
+            Assert.Equal(3, domainTeach2.AssignedLessons);                       
         }
 
         [Fact]
@@ -96,18 +92,18 @@ namespace Lab1MAUI.Tests
         {
             var ui = CreateBaseUI();
             var math = AddDiscipline(ui, "Math");
-            var oldTeacher = AddTeacher(ui, "OldTeacher", targetHours: 5, math);
+            var oldTeacher = AddTeacher(ui, "OldTeacher", targetLessons: 5, math);
             AddRoom(ui, "101");
             var group = AddGroup(ui, "G1", 25, (math, 2));
 
-            Assert.True(ui.TryGenerate(out _));
+            ui.Generate();
             var r1Lessons = ui.LastResult.Grid.SelectMany(c => c).ToList();
             Assert.All(r1Lessons, l => Assert.Equal(oldTeacher.Id, l.TeacherId));
 
             ui.Teachers.Remove(oldTeacher);
-            var newTeacher = AddTeacher(ui, "NewTeacher", targetHours: 5, math);
+            var newTeacher = AddTeacher(ui, "NewTeacher", targetLessons: 5, math);
 
-            Assert.True(ui.TryGenerate(out _));
+            ui.Generate();
             var r2Lessons = ui.LastResult.Grid.SelectMany(c => c).ToList();
 
             Assert.Equal(2, r2Lessons.Count);
@@ -119,17 +115,17 @@ namespace Lab1MAUI.Tests
         {
             var ui = CreateBaseUI(days: 3, cellsPerDay: 1);
             var math = AddDiscipline(ui, "Math");
-            var teacher = AddTeacher(ui, "Smith", targetHours: 5, math);
+            var teacher = AddTeacher(ui, "Smith", targetLessons: 5, math);
             AddRoom(ui, "101");
             AddGroup(ui, "G1", 25, (math, 2));
 
-            Assert.True(ui.TryGenerate(out _));
+            ui.Generate();
             var slots1 = ui.LastResult.Grid.SelectMany(c => c).Select(l => l.CellIndex).OrderBy(x => x).ToList();
             Assert.Equal(2, slots1.Count);
             Assert.Contains(0, slots1);
 
             var constraintForm = new ConstraintFormViewModel(ConstraintOwnerType.Teacher, ui.Config);
-            constraintForm.SelectedConstraintType = "Вихідний час (TimeOff)";
+            constraintForm.SelectType(FormConstraintType.TimeOff);
             constraintForm.TimeOffCellIndex = 0; 
 
             IConstraintUI? addedConstraint = null;
@@ -139,7 +135,7 @@ namespace Lab1MAUI.Tests
             Assert.NotNull(addedConstraint);
             teacher.Constraints.Add(addedConstraint);
 
-            Assert.True(ui.TryGenerate(out _));
+            ui.Generate();
             var slots2 = ui.LastResult.Grid.SelectMany(c => c).Select(l => l.CellIndex).OrderBy(x => x).ToList();
 
             Assert.Equal(2, slots2.Count);
@@ -152,18 +148,18 @@ namespace Lab1MAUI.Tests
         {
             var ui = CreateBaseUI(days: 1, cellsPerDay: 4);
             var math = AddDiscipline(ui, "Math");
-            AddTeacher(ui, "T1", targetHours: 5, math);
-            AddTeacher(ui, "T2", targetHours: 5, math);
+            AddTeacher(ui, "T1", targetLessons: 5, math);
+            AddTeacher(ui, "T2", targetLessons: 5, math);
             AddRoom(ui, "R1");
             AddRoom(ui, "R2");
             AddGroup(ui, "G1", 25, (math, 2));
 
-            Assert.True(ui.TryGenerate(out _));
+            ui.Generate();
             Assert.Equal(2, ui.LastResult.Grid.SelectMany(c => c).Count());
 
             AddGroup(ui, "G2", 20, (math, 2));
 
-            Assert.True(ui.TryGenerate(out _));
+            ui.Generate();
             var lessons2 = ui.LastResult.Grid.SelectMany(c => c).ToList();
 
             Assert.Equal(4, lessons2.Count); 
@@ -175,20 +171,19 @@ namespace Lab1MAUI.Tests
         {
             var ui = CreateBaseUI(days: 1, cellsPerDay: 3);
             var math = AddDiscipline(ui, "Math");
-            var teacher = AddTeacher(ui, "Smith", targetHours: 5, math);
+            var teacher = AddTeacher(ui, "Smith", targetLessons: 5, math);
             AddRoom(ui, "101");
             var group = AddGroup(ui, "G1", 25, (math, 2));
 
-            Assert.True(ui.TryGenerate(out _));
+            ui.Generate();
 
             var vm1 = new ScheduleResultViewModel(ui);
             Assert.Equal(0, vm1.UnassignedLessons.Count);
             Assert.Equal(2, vm1.GroupSchedules.First().Days.SelectMany(d => d.Lessons).Count());
 
-            group.Requirements[0].RequiredHours = 10;
+            group.Requirements[0].RequiredLessons = 10;
 
-            bool ok = ui.TryGenerate(out _);
-            Assert.False(ok); 
+            ui.Generate();
 
             var vm2 = new ScheduleResultViewModel(ui);
             Assert.True(vm2.HasUnassignedLessons);
@@ -196,7 +191,7 @@ namespace Lab1MAUI.Tests
             var unassigned = vm2.UnassignedLessons.First();
             Assert.Equal("G1", unassigned.GroupName);
             Assert.Equal("Math", unassigned.SubjectName);
-            Assert.Equal(7, unassigned.Hours);
+            Assert.Equal(7, unassigned.LessonsCount);
         }
 
         [Fact]
@@ -205,33 +200,27 @@ namespace Lab1MAUI.Tests
             var ui = CreateBaseUI(days: 2, cellsPerDay: 4); 
             var math    = AddDiscipline(ui, "Math");
             var physics = AddDiscipline(ui, "Physics");
-            var teacher = AddTeacher(ui, "Prof", targetHours: 10, math, physics);
+            var teacher = AddTeacher(ui, "Prof", targetLessons: 10, math, physics);
             AddRoom(ui, "101", capacity: 30);
             var group = AddGroup(ui, "G1", 25, (math, 2));
 
-            Assert.True(ui.TryGenerate(out _));
-            var r1 = ui.LastResult;
+            var r1 = ui.Generate();
             Assert.Equal(2, r1.Grid.SelectMany(c => c).Count());
 
-            group.Requirements.Add(new GroupRequirementUI { DisciplineId = physics.Id, RequiredHours = 3 });
+            group.Requirements.Add(new GroupRequirementUI { DisciplineId = physics.Id, RequiredLessons = 3 });
 
-            Assert.True(ui.TryGenerate(out _));
-            var r2 = ui.LastResult;
+            var r2 = ui.Generate();
 
             Assert.NotSame(r1, r2);
             Assert.Equal(5, r2.Grid.SelectMany(c => c).Count()); 
 
             Assert.Equal(2, r1.Grid.SelectMany(c => c).Count());
 
-            group.Requirements.First(r => r.DisciplineId == math.Id).RequiredHours = 4;
+            group.Requirements.First(r => r.DisciplineId == math.Id).RequiredLessons = 4;
 
             teacher.Constraints.Add(new DailyLimitConstraintUI { MaxLessonsPerDay = 3 });
 
-            bool ok3 = ui.TryGenerate(out string err3);
-            var r3 = ui.LastResult;
-
-            Assert.False(ok3, "Раунд 3 повинен провалитися: 7 уроків не вміщаються при ліміті 3/день × 2 дні");
-            Assert.NotEmpty(err3);
+            var r3 = ui.Generate();
 
             Assert.Equal(5, r2.Grid.SelectMany(c => c).Count()); 
             Assert.Equal(2, r1.Grid.SelectMany(c => c).Count()); 
@@ -240,12 +229,12 @@ namespace Lab1MAUI.Tests
             Assert.NotSame(r2, r3);
 
             var vm = new ScheduleResultViewModel(ui);
-            int totalRequired   = group.Requirements.Sum(r => r.RequiredHours); 
+            int totalRequired   = group.Requirements.Sum(r => r.RequiredLessons); 
             int totalPlaced     = r3.Grid.SelectMany(c => c).Count();
             int totalUnassigned = totalRequired - totalPlaced;
 
             Assert.True(totalUnassigned > 0, "Після провальної генерації мають бути нерозподілені уроки");
-            Assert.Equal(totalUnassigned, vm.UnassignedLessons.Sum(u => u.Hours));
+            Assert.Equal(totalUnassigned, vm.UnassignedLessons.Sum(u => u.LessonsCount));
         }
     }
 }

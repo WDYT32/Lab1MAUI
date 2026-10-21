@@ -40,9 +40,7 @@ public class DashboardViewModel : BaseViewModel
         ((Command)GenerateScheduleCommand).ChangeCanExecute();
 
         await Task.Delay(500);
-
-        bool success = _scheduleUI.TryGenerate(out string errorMessage);
-
+        _scheduleUI.Generate();
         IsGenerating = false;
         ((Command)GenerateScheduleCommand).ChangeCanExecute();
 

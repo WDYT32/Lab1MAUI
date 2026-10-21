@@ -32,7 +32,7 @@ namespace Lab1MAUI.Models.UI.Participants
             }
         } = string.Empty;
 
-        public int TargetHours { get; set; } = 10;
+        public int TargetLessons { get; set; } = 10;
 
         public ObservableCollection<TeacherCompetenceUI> Competences { get; } = new();
         public ObservableCollection<IConstraintUI> Constraints { get; } = new();
@@ -40,7 +40,7 @@ namespace Lab1MAUI.Models.UI.Participants
         public Teacher MapToModel(ScheduleConfig config)
         {
             var teacher = new Teacher(Id, Name, config.TotalCells);
-            teacher.TargetHours = TargetHours;
+            teacher.TargetLessons = TargetLessons;
 
             foreach (var comp in Competences)
             {

@@ -6,10 +6,10 @@ namespace Lab1MAUI.Models.Schedule.Participants
     {
         public Guid Id { get; }
         public string Name { get; set; }
-        public int TargetHours { get; set; }
+        public int TargetLessons { get; set; }
         
-        private int _assignedHours;
-        public int AssignedHours => _assignedHours;
+        private int _assignedLessons;
+        public int AssignedLessons => _assignedLessons;
 
         public List<TeacherCompetence> Competences { get; } = new();
         public List<IConstraint> Constraints { get; } = new();
@@ -51,9 +51,9 @@ namespace Lab1MAUI.Models.Schedule.Participants
             return _bookedCells[cellIndex];
         }
 
-        public bool CanTakeMoreHours()
+        public bool CanTakeMoreLessons()
         {
-            return _assignedHours < TargetHours;
+            return _assignedLessons < TargetLessons;
         }
 
         public bool CanTeach(Discipline disc)
@@ -66,19 +66,19 @@ namespace Lab1MAUI.Models.Schedule.Participants
             if (_bookedCells[cellIndex])
                 throw new InvalidOperationException($"Slot {cellIndex} is already booked for teacher {Name}");
             _bookedCells[cellIndex] = true;
-            _assignedHours++;
+            _assignedLessons++;
         }
 
         public void ReleaseSlot(int cellIndex)
         {
             _bookedCells[cellIndex] = false;
-            _assignedHours--;
+            _assignedLessons--;
         }
 
         public void ClearBookings()
         {
             Array.Fill(_bookedCells, false);
-            _assignedHours = 0;
+            _assignedLessons = 0;
         }
     }
 }

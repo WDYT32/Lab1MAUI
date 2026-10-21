@@ -78,11 +78,11 @@ classDiagram
     class Teacher {
         +Guid Id
         +string Name
-        +int TargetHours
-        +int AssignedHours
+        +int TargetLessons
+        +int AssignedLessons
         +List~TeacherCompetence~ Competences
         +List~IConstraint~ Constraints
-        +CanTakeMoreHours() bool
+        +CanTakeMoreLessons() bool
         +CanTeach(Discipline disc) bool
         +BookSlot(int cellIndex) void
         +ReleaseSlot(int cellIndex) void
@@ -116,8 +116,8 @@ classDiagram
 
     class GroupRequirement {
         +Guid DisciplineId
-        +int RequiredHours
-        +int FulfilledHours
+        +int RequiredLessons
+        +int FulfilledLessons
         +bool IsFulfilled()
     }
 
@@ -217,7 +217,7 @@ classDiagram
         +ObservableCollection~DisciplineUI~ Disciplines
         +Schedule LastResult
         +MapToModel() Schedule
-        +TryGenerate(out string errorMessage) bool
+        +Generate() Schedule
     }
 
     class TeacherUI {
@@ -226,7 +226,7 @@ classDiagram
         +string LastName
         +string Patronymic
         +string Name
-        +int TargetHours
+        +int TargetLessons
         +ObservableCollection~TeacherCompetenceUI~ Competences
         +ObservableCollection~IConstraintUI~ Constraints
         +MapToModel(ScheduleConfig config) Teacher
@@ -276,7 +276,7 @@ classDiagram
 
     class GroupRequirementUI {
         +Guid DisciplineId
-        +int RequiredHours
+        +int RequiredLessons
         +MapToModel() GroupRequirement
     }
     class TeacherCompetenceUI {
@@ -331,7 +331,7 @@ flowchart TD
     
     CombineMasks --> CheckTrue{"CombinedMask <br/> містить хоч один TRUE?"}
     
-    CheckTrue -->|Так, Слот знайдено| PlaceLesson["Підтвердження Транзакції:<br/>1. Записати Урок у Слот<br/>2. Збільшити FulfilledHours<br/>3. Заблокувати слот для учасників"]
+    CheckTrue -->|Так, Слот знайдено| PlaceLesson["Підтвердження Транзакції:<br/>1. Записати Урок у Слот<br/>2. Збільшити FulfilledLessons<br/>3. Заблокувати слот для учасників"]
     PlaceLesson --> UpdateBestState{"Чи розміщено <br/> більше уроків ніж раніше?"}
     UpdateBestState -->|Так| SaveBest["Зберегти поточний <br/> стан (_bestLessons)"]
     UpdateBestState -->|Ні| CheckReq
@@ -414,7 +414,7 @@ flowchart TD
     Groups -- "Редагувати" --> GroupEdit["GroupEditPage"]
     
     %% Вбудований компонент вибору дисциплін
-    TeacherEdit -. "Вбудований компонент" .-> SelectionModal["DisciplineSelection (Frame Popup)"]
+    TeacherEdit -. "Вбудований компонент" .-> SelectionModal["DisciplineSelection (Modal Popup)"]
     GroupEdit -. "Вбудований компонент" .-> SelectionModal
     
     %% Логіка генерації
@@ -453,7 +453,7 @@ flowchart TD
 3. **Уніфікований шар редагування (`BaseEditViewModel<TEntity>`)**:
    - `BaseEditViewModel<TEntity>`: автоматизує обробку Shell `[QueryProperty]` для завантаження за ID або створення нового екземпляра (`"new"`), керує станом `IsNew`, надає гачок асинхронної валідації `ValidateBeforeSaveAsync()`, синхронізацію в колекції `ScheduleUI` та зворотну навігацію `..`. 
    - Моделі редагування (`TeacherEditViewModel`, `GroupEditViewModel`, `DisciplineEditViewModel`, `RoomEditViewModel`) напряму наслідують `BaseEditViewModel<TEntity>`, утворюючи просту пласку ієрархію без проміжних класів, та використовують композицію з дочірніми компонентами `ConstraintsEditorViewModel` і `DisciplineSelectionViewModel`.
-   - **Структура папок**: Усі класи редагування, базові моделі та форми винесені в окрему підпапку `ViewModels/Edit/` (простір імен `Lab1MAUI.ViewModels.Edit`), а відповідні XAML-сторінки редагування — у підпапку `Views/Edit/` (простір імен `Lab1MAUI.Views.Edit`), тоді як у коренях `ViewModels/` та `Views/` залишаються головні сторінкові компоненти.
+   - **Структура папок**: Усі класи редагування, базові моделі та форми винесені в окрему підпапку `ViewModels/Edit/` (простір імен `Lab1MAUI.ViewModels.Edit`), а відповідні XAML-сторінки редагування — у підпапку `Views/Edit/` (простір імен `Lab1MAUI.Views.Edit`). Спискові сторінки учасників згруповані у підпапку `Views/Participants/` (простір імен `Lab1MAUI.Views.Participants`) за аналогією до `ViewModels/Participants/` та `Models/UI/Participants/`, тоді як у коренях `ViewModels/` та `Views/` залишаються головні сторінкові компоненти.
 
 4. **Чітке структурування учасників розкладу (`Participants`) у Domain та Presentation (UI) шарах**:
    - **`Models/Schedule/Participants/`**: підпапка містить виключно сутності, що реалізують доменний інтерфейс `IParticipant` (`Teacher`, `StudentGroup`, `Discipline`, `Room`, `IParticipant`). Допоміжні класи зв'язків та вимог (`GroupRequirement`, `TeacherCompetence`), які не наслідують `IParticipant`, винесені безпосередньо в корінь `Models/Schedule/`.
@@ -549,7 +549,7 @@ classDiagram
         +string FirstName
         +string LastName
         +string Patronymic
-        +int TargetHours
+        +int TargetLessons
         +string TeacherId
         +ObservableCollection~TeacherCompetenceItem~ Competences
         +ICommand AddCompetenceCommand

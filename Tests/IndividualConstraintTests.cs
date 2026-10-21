@@ -19,12 +19,12 @@ namespace Lab1MAUI.Tests
             schedule.Disciplines.Add(math);
             schedule.Rooms.Add(new Room(Guid.NewGuid(), "101", 30, config.TotalCells));
             
-            var t1 = new Teacher(Guid.NewGuid(), "T1", config.TotalCells) { TargetHours = 2 };
+            var t1 = new Teacher(Guid.NewGuid(), "T1", config.TotalCells) { TargetLessons = 2 };
             t1.Competences.Add(new TeacherCompetence { DisciplineId = math.Id });
             schedule.Teachers.Add(t1);
             
             var g1 = new StudentGroup(Guid.NewGuid(), "G1", config.TotalCells) { StudentsCount = 20 };
-            g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredHours = 2 });
+            g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredLessons = 2 });
             
             
             g1.Constraints.Add(new DailyLimitConstraint(g1, 1, config.CellsPerDay));

@@ -23,7 +23,7 @@ namespace Lab1MAUI.ViewModels.Edit
         }
 
         public ConstraintsEditorViewModel ConstraintsEditor { get; }
-        public DisciplineSelectionViewModel DisciplineSelection { get; private set; }
+        public DisciplineSelectionViewModel DisciplineSelection { get; }
         public ObservableCollection<GroupRequirementItem> Requirements { get; } = new();
 
         public ICommand AddRequirementCommand { get; }
@@ -57,7 +57,7 @@ namespace Lab1MAUI.ViewModels.Edit
             {
                 var disciplineName = ScheduleUI.Disciplines
                     .FirstOrDefault(d => d.Id == r.DisciplineId)?.Name ?? "Невідома дисципліна";
-                Requirements.Add(new GroupRequirementItem(r.DisciplineId, disciplineName, r.RequiredHours));
+                Requirements.Add(new GroupRequirementItem(r.DisciplineId, disciplineName, r.RequiredLessons));
             }
 
             ConstraintsEditor.LoadFrom(entity.Constraints);
@@ -65,15 +65,17 @@ namespace Lab1MAUI.ViewModels.Edit
 
         protected override async Task<bool> ValidateBeforeSaveAsync()
         {
-            int totalReqHours = Requirements.Sum(r => r.RequiredHours);
-            if (totalReqHours > ScheduleUI.Config.TotalCells)
+            if (string.IsNullOrWhiteSpace(Name))
             {
-                if (Application.Current?.MainPage != null)
-                {
-                    await Application.Current.MainPage.DisplayAlert("Перевантаження",
-                        $"Загальна кількість годин ({totalReqHours}) перевищує фізично можливу кількість годин на тиждень ({ScheduleUI.Config.TotalCells}).",
-                        "ОК");
-                }
+                await ShowAlertAsync("Помилка валідації", "Будь ласка, вкажіть назву групи.");
+                return false;
+            }
+
+            int totalReqLessons = Requirements.Sum(r => r.RequiredLessons);
+            if (totalReqLessons > ScheduleUI.Config.TotalCells)
+            {
+                await ShowAlertAsync("Перевантаження",
+                    $"Загальна кількість занять ({totalReqLessons}) перевищує фізично можливу кількість уроків на тиждень ({ScheduleUI.Config.TotalCells}).");
                 return false;
             }
             return true;
@@ -86,7 +88,7 @@ namespace Lab1MAUI.ViewModels.Edit
 
             entity.Requirements.Clear();
             foreach (var r in Requirements)
-                entity.Requirements.Add(new GroupRequirementUI { DisciplineId = r.DisciplineId, RequiredHours = r.RequiredHours });
+                entity.Requirements.Add(new GroupRequirementUI { DisciplineId = r.DisciplineId, RequiredLessons = r.RequiredLessons });
 
             ConstraintsEditor.ApplyTo(entity.Constraints);
         }
@@ -97,18 +99,18 @@ namespace Lab1MAUI.ViewModels.Edit
         public Guid DisciplineId { get; }
         public string DisciplineName { get; }
 
-        private int _requiredHours;
-        public int RequiredHours
+        private int _requiredLessons;
+        public int RequiredLessons
         {
-            get => _requiredHours;
-            set => SetProperty(ref _requiredHours, value);
+            get => _requiredLessons;
+            set => SetProperty(ref _requiredLessons, value);
         }
 
-        public GroupRequirementItem(Guid disciplineId, string disciplineName, int requiredHours)
+        public GroupRequirementItem(Guid disciplineId, string disciplineName, int requiredLessons)
         {
             DisciplineId = disciplineId;
             DisciplineName = disciplineName;
-            _requiredHours = requiredHours;
+            _requiredLessons = requiredLessons;
         }
     }
 }

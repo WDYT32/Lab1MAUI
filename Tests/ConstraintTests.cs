@@ -19,12 +19,12 @@ namespace Lab1MAUI.Tests
             var math = new Discipline(Guid.NewGuid(), "Math", 2);
             var room = new Room(Guid.NewGuid(), "101", 30, 2);
             
-            var t1 = new Teacher(Guid.NewGuid(), "T1", 2) { TargetHours = 1 };
+            var t1 = new Teacher(Guid.NewGuid(), "T1", 2) { TargetLessons = 1 };
             t1.Competences.Add(new TeacherCompetence { DisciplineId = math.Id });
             t1.Constraints.Add(new TimeOffConstraint(new[] { 0 })); 
             
             var g1 = new StudentGroup(Guid.NewGuid(), "G1", 2) { StudentsCount = 20 };
-            g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredHours = 1 });
+            g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredLessons = 1 });
 
             schedule.Disciplines.Add(math);
             schedule.Rooms.Add(room);
@@ -45,11 +45,11 @@ namespace Lab1MAUI.Tests
             var math = new Discipline(Guid.NewGuid(), "Math", 9);
             var room = new Room(Guid.NewGuid(), "101", 30, 9);
             
-            var t1 = new Teacher(Guid.NewGuid(), "T1", 9) { TargetHours = 3 };
+            var t1 = new Teacher(Guid.NewGuid(), "T1", 9) { TargetLessons = 3 };
             t1.Competences.Add(new TeacherCompetence { DisciplineId = math.Id });
             
             var g1 = new StudentGroup(Guid.NewGuid(), "G1", 9) { StudentsCount = 20 };
-            g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredHours = 3 });
+            g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredLessons = 3 });
             g1.Constraints.Add(new DailyLimitConstraint(g1, 1, 3)); 
 
             schedule.Disciplines.Add(math);
@@ -73,12 +73,12 @@ namespace Lab1MAUI.Tests
             var math = new Discipline(Guid.NewGuid(), "Math", 4);
             var room = new Room(Guid.NewGuid(), "101", 30, 4);
             
-            var t1 = new Teacher(Guid.NewGuid(), "T1", 4) { TargetHours = 3 };
+            var t1 = new Teacher(Guid.NewGuid(), "T1", 4) { TargetLessons = 3 };
             t1.Competences.Add(new TeacherCompetence { DisciplineId = math.Id });
             t1.Constraints.Add(new MaxConsecutiveLessonsConstraint(t1, 2, 4)); 
             
             var g1 = new StudentGroup(Guid.NewGuid(), "G1", 4) { StudentsCount = 20 };
-            g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredHours = 3 });
+            g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredLessons = 3 });
 
             schedule.Disciplines.Add(math);
             schedule.Rooms.Add(room);
@@ -103,13 +103,13 @@ namespace Lab1MAUI.Tests
             var math = new Discipline(Guid.NewGuid(), "Math", 25);
             var room = new Room(Guid.NewGuid(), "101", 30, 25);
             
-            var t1 = new Teacher(Guid.NewGuid(), "T1", 25) { TargetHours = 2 };
+            var t1 = new Teacher(Guid.NewGuid(), "T1", 25) { TargetLessons = 2 };
             t1.Competences.Add(new TeacherCompetence { DisciplineId = math.Id });
             
             t1.Constraints.Add(new SpecificDayConstraint(new[] { 3 }, 5));
             
             var g1 = new StudentGroup(Guid.NewGuid(), "G1", 25) { StudentsCount = 20 };
-            g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredHours = 2 });
+            g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredLessons = 2 });
 
             schedule.Disciplines.Add(math);
             schedule.Rooms.Add(room);
@@ -130,13 +130,13 @@ namespace Lab1MAUI.Tests
             var math = new Discipline(Guid.NewGuid(), "Math", 10);
             var room = new Room(Guid.NewGuid(), "101", 30, 10);
             
-            var t1 = new Teacher(Guid.NewGuid(), "T1", 10) { TargetHours = 2 };
+            var t1 = new Teacher(Guid.NewGuid(), "T1", 10) { TargetLessons = 2 };
             t1.Competences.Add(new TeacherCompetence { DisciplineId = math.Id });
             
             t1.Constraints.Add(new SpecificTimeConstraint(new[] { 3 }, 5));
             
             var g1 = new StudentGroup(Guid.NewGuid(), "G1", 10) { StudentsCount = 20 };
-            g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredHours = 2 });
+            g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredLessons = 2 });
 
             schedule.Disciplines.Add(math);
             schedule.Rooms.Add(room);
@@ -157,12 +157,12 @@ namespace Lab1MAUI.Tests
             var math = new Discipline(Guid.NewGuid(), "Math", 10);
             var room = new Room(Guid.NewGuid(), "101", 30, 10);
             
-            var t1 = new Teacher(Guid.NewGuid(), "T1", 10) { TargetHours = 1 };
+            var t1 = new Teacher(Guid.NewGuid(), "T1", 10) { TargetLessons = 1 };
             t1.Competences.Add(new TeacherCompetence { DisciplineId = math.Id });
             t1.Constraints.Add(new SpecificDayConstraint(new[] { 0 }, 5)); 
             
             var g1 = new StudentGroup(Guid.NewGuid(), "G1", 10) { StudentsCount = 20 };
-            g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredHours = 1 });
+            g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredLessons = 1 });
             g1.Constraints.Add(new SpecificDayConstraint(new[] { 1 }, 5)); 
 
             schedule.Disciplines.Add(math);
@@ -183,11 +183,11 @@ namespace Lab1MAUI.Tests
             math.Constraints.Add(new SpecificDayConstraint(new[] { 1 }, 2)); 
             var room = new Room(Guid.NewGuid(), "101", 30, 4);
             
-            var t1 = new Teacher(Guid.NewGuid(), "T1", 4) { TargetHours = 1 };
+            var t1 = new Teacher(Guid.NewGuid(), "T1", 4) { TargetLessons = 1 };
             t1.Competences.Add(new TeacherCompetence { DisciplineId = math.Id });
             
             var g1 = new StudentGroup(Guid.NewGuid(), "G1", 4) { StudentsCount = 20 };
-            g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredHours = 1 });
+            g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredLessons = 1 });
 
             schedule.Disciplines.Add(math);
             schedule.Rooms.Add(room);
@@ -214,18 +214,18 @@ namespace Lab1MAUI.Tests
             var room1 = new Room(Guid.NewGuid(), "101", 30, 6);
             var room2 = new Room(Guid.NewGuid(), "102", 30, 6);
             
-            var t1 = new Teacher(Guid.NewGuid(), "T1", 6) { TargetHours = 10 };
+            var t1 = new Teacher(Guid.NewGuid(), "T1", 6) { TargetLessons = 10 };
             t1.Competences.Add(new TeacherCompetence { DisciplineId = math.Id });
-            var t2 = new Teacher(Guid.NewGuid(), "T2", 6) { TargetHours = 10 };
+            var t2 = new Teacher(Guid.NewGuid(), "T2", 6) { TargetLessons = 10 };
             t2.Competences.Add(new TeacherCompetence { DisciplineId = math.Id });
             
             
             var g1 = new StudentGroup(Guid.NewGuid(), "G1", 6) { StudentsCount = 20 };
-            g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredHours = 3 });
+            g1.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredLessons = 3 });
             
             
             var g2 = new StudentGroup(Guid.NewGuid(), "G2", 6) { StudentsCount = 20 };
-            g2.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredHours = 3 });
+            g2.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredLessons = 3 });
 
             schedule.Disciplines.Add(math);
             schedule.Rooms.Add(room1);

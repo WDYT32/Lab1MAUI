@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:views="clr-namespace:Lab1MAUI.Views"
+    xmlns:participants="clr-namespace:Lab1MAUI.Views.Participants"
     Title="Генератор розкладу"
     FlyoutBehavior="Flyout">
 
@@ -14,19 +15,19 @@
     </FlyoutItem>
     
     <FlyoutItem Title="Дисципліни">
-        <ShellContent Route="DisciplinesPage" ContentTemplate="{DataTemplate views:DisciplinesPage}" />
+        <ShellContent Route="DisciplinesPage" ContentTemplate="{DataTemplate participants:DisciplinesPage}" />
     </FlyoutItem>
 
     <FlyoutItem Title="Аудиторії">
-        <ShellContent Route="RoomsPage" ContentTemplate="{DataTemplate views:RoomsPage}" />
+        <ShellContent Route="RoomsPage" ContentTemplate="{DataTemplate participants:RoomsPage}" />
     </FlyoutItem>
 
     <FlyoutItem Title="Викладачі">
-        <ShellContent Route="TeachersPage" ContentTemplate="{DataTemplate views:TeachersPage}" />
+        <ShellContent Route="TeachersPage" ContentTemplate="{DataTemplate participants:TeachersPage}" />
     </FlyoutItem>
     
     <FlyoutItem Title="Студентські групи">
-        <ShellContent Route="StudentGroupsPage" ContentTemplate="{DataTemplate views:StudentGroupsPage}" />
+        <ShellContent Route="StudentGroupsPage" ContentTemplate="{DataTemplate participants:StudentGroupsPage}" />
     </FlyoutItem>
     
     <FlyoutItem Title="Налаштування">

@@ -18,7 +18,7 @@ namespace Lab1MAUI.Tests
         
         private Teacher AddT(Schedule s, string n, Discipline d, int target=10) 
         { 
-            var t = new Teacher(Guid.NewGuid(), n, s.Config.TotalCells) { TargetHours = target }; 
+            var t = new Teacher(Guid.NewGuid(), n, s.Config.TotalCells) { TargetLessons = target }; 
             t.Competences.Add(new TeacherCompetence { DisciplineId=d.Id }); 
             s.Teachers.Add(t); 
             return t; 
@@ -27,7 +27,7 @@ namespace Lab1MAUI.Tests
         private StudentGroup AddG(Schedule s, string n, int count, Discipline d, int req) 
         { 
             var g = new StudentGroup(Guid.NewGuid(), n, s.Config.TotalCells) { StudentsCount = count }; 
-            g.Requirements.Add(new GroupRequirement { DisciplineId=d.Id, RequiredHours=req }); 
+            g.Requirements.Add(new GroupRequirement { DisciplineId=d.Id, RequiredLessons=req }); 
             s.Groups.Add(g); 
             return g; 
         }
@@ -139,7 +139,7 @@ namespace Lab1MAUI.Tests
         }
 
         [Fact]
-        public void Resources_TeacherTargetHours_CreatesBottleneck()
+        public void Resources_TeacherTargetLessons_CreatesBottleneck()
         {
             var s = Create(1, 5);
             var math = AddD(s, "Math");
@@ -163,15 +163,15 @@ namespace Lab1MAUI.Tests
             var phys = AddD(s, "Physics");
             AddR(s, "101", 30);
 
-            var t = new Teacher(Guid.NewGuid(), "SuperGenius", 8) { TargetHours = 10 };
+            var t = new Teacher(Guid.NewGuid(), "SuperGenius", 8) { TargetLessons = 10 };
             t.Competences.Add(new TeacherCompetence { DisciplineId = math.Id });
             t.Competences.Add(new TeacherCompetence { DisciplineId = phys.Id });
             t.Constraints.Add(new DailyLimitConstraint(t, 2, 4)); 
             s.Teachers.Add(t);
 
             var g = new StudentGroup(Guid.NewGuid(), "G1", 8) { StudentsCount = 20 };
-            g.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredHours = 2 });
-            g.Requirements.Add(new GroupRequirement { DisciplineId = phys.Id, RequiredHours = 2 });
+            g.Requirements.Add(new GroupRequirement { DisciplineId = math.Id, RequiredLessons = 2 });
+            g.Requirements.Add(new GroupRequirement { DisciplineId = phys.Id, RequiredLessons = 2 });
             s.Groups.Add(g);
 
             s.Generate();
