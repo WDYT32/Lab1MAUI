@@ -1,4 +1,4 @@
-using Lab1MAUI.Models.MTM;
+using Lab1MAUI.Models.UI;
 using Lab1MAUI.Models.Schedule;
 using ScheduleModel = Lab1MAUI.Models.Schedule.Schedule;
 using System.Collections.ObjectModel;
@@ -8,16 +8,16 @@ namespace Lab1MAUI.ViewModels;
 
 public class ScheduleResultViewModel : BaseViewModel
 {
-    private readonly ScheduleMTM _scheduleMTM;
+    private readonly ScheduleUI _scheduleUI;
 
     public ObservableCollection<UnassignedDisplay> UnassignedLessons { get; } = new();
     public ObservableCollection<GroupScheduleDisplay> GroupSchedules { get; } = new();
 
     public bool HasUnassignedLessons => UnassignedLessons.Any();
 
-    public ScheduleResultViewModel(ScheduleMTM scheduleMTM)
+    public ScheduleResultViewModel(ScheduleUI scheduleUI)
     {
-        _scheduleMTM = scheduleMTM;
+        _scheduleUI = scheduleUI;
         LoadResults();
     }
 
@@ -26,7 +26,7 @@ public class ScheduleResultViewModel : BaseViewModel
         UnassignedLessons.Clear();
         GroupSchedules.Clear();
 
-        var schedule = _scheduleMTM.LastResult;
+        var schedule = _scheduleUI.LastResult;
         if (schedule == null) return;
 
         var allLessons = schedule.Grid.SelectMany(cell => cell).ToList();
@@ -37,30 +37,26 @@ public class ScheduleResultViewModel : BaseViewModel
         OnPropertyChanged(nameof(HasUnassignedLessons));
     }
 
-    
-    
-    
-    
     private void LoadUnassignedLessons(ScheduleModel schedule, List<Lesson> allLessons)
     {
-        foreach (var groupMTM in _scheduleMTM.Groups)
+        foreach (var groupUI in _scheduleUI.Groups)
         {
-            foreach (var reqMTM in groupMTM.Requirements)
+            foreach (var reqUI in groupUI.Requirements)
             {
                 int placed = allLessons.Count(l =>
-                    l.StudentGroupId == groupMTM.Id &&
-                    l.DisciplineId == reqMTM.DisciplineId);
+                    l.StudentGroupId == groupUI.Id &&
+                    l.DisciplineId == reqUI.DisciplineId);
 
-                int unassigned = reqMTM.RequiredHours - placed;
+                int unassigned = reqUI.RequiredHours - placed;
                 if (unassigned <= 0) continue;
 
-                var disciplineName = _scheduleMTM.Disciplines
-                    .FirstOrDefault(d => d.Id == reqMTM.DisciplineId)?.Name ?? "Невідомо";
+                var disciplineName = _scheduleUI.Disciplines
+                    .FirstOrDefault(d => d.Id == reqUI.DisciplineId)?.Name ?? "Невідомо";
 
                 UnassignedLessons.Add(new UnassignedDisplay
                 {
                     SubjectName = disciplineName,
-                    GroupName   = groupMTM.Name,
+                    GroupName   = groupUI.Name,
                     Hours       = unassigned,
                     TotalMinutes = unassigned * schedule.Config.LessonDurationMinutes
                 });
@@ -70,10 +66,10 @@ public class ScheduleResultViewModel : BaseViewModel
 
     private void LoadGroupSchedules(ScheduleModel schedule, List<Lesson> allLessons)
     {
-        foreach (var groupMTM in _scheduleMTM.Groups)
+        foreach (var groupUI in _scheduleUI.Groups)
         {
-            var display = new GroupScheduleDisplay { GroupName = groupMTM.Name };
-            var groupLessons = allLessons.Where(l => l.StudentGroupId == groupMTM.Id).ToList();
+            var display = new GroupScheduleDisplay { GroupName = groupUI.Name };
+            var groupLessons = allLessons.Where(l => l.StudentGroupId == groupUI.Id).ToList();
 
             var lessonsByDay = groupLessons
                 .Select(l => new

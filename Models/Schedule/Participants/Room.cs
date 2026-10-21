@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace Lab1MAUI.Models.Schedule.Participants
 {
     public class Room : IParticipant

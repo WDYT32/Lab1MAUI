@@ -37,7 +37,7 @@ classDiagram
         +List~Room~ Rooms
         
         +Generate() void
-        -GenerateRecursive() bool
+        -GenerateRecursive(int placedCount) bool
         -FilterTeachers(Discipline disc, StudentGroup group) IEnumerable~Teacher~
         -FilterRooms(Discipline disc, StudentGroup group) IEnumerable~Room~
         -FindCommonFreeSlot(IParticipant g, IParticipant t, IParticipant r, IParticipant d) int
@@ -57,51 +57,72 @@ classDiagram
     %% --- УЧАСНИКИ ТА ЇХ СТАН ---
     class IParticipant {
         <<interface>>
+        +Guid Id
+        +string Name
         +GetAvailabilityMask() bool[]
         +IsBooked(int cellIndex) bool
     }
 
     class StudentGroup {
-        +StudentGroupMTM Info
+        +Guid Id
+        +string Name
+        +int StudentsCount
+        +List~GroupRequirement~ Requirements
         +List~IConstraint~ Constraints
         +GetUnfulfilledRequirements() List~GroupRequirement~
         +BookSlot(int cellIndex) void
         +ReleaseSlot(int cellIndex) void
+        +ClearBookings() void
     }
 
     class Teacher {
-        +TeacherMTM Info
+        +Guid Id
+        +string Name
+        +int TargetHours
         +int AssignedHours
+        +List~TeacherCompetence~ Competences
         +List~IConstraint~ Constraints
         +CanTakeMoreHours() bool
         +CanTeach(Discipline disc) bool
         +BookSlot(int cellIndex) void
         +ReleaseSlot(int cellIndex) void
+        +ClearBookings() void
     }
 
     class Discipline {
-        +DisciplineMTM Info
+        +Guid Id
+        +string Name
         +List~IConstraint~ Constraints
+        +SetContext(Guid groupId) void
+        +BookSlot(int cellIndex, Guid groupId) void
+        +ReleaseSlot(int cellIndex, Guid groupId) void
+        +ClearBookings() void
+        +GetAvailabilityMask() bool[]
+        +IsBooked(int cellIndex) bool
     }
 
     class Room {
-        +RoomMTM Info
+        +Guid Id
+        +string Name
+        +int Capacity
         -int[] _reservedSeatsPerSlot
         -int _currentRequestStudents
         +SetContext(int studentsCount) void
         +CanAccommodate(int studentsCount, int cellIndex) bool
         +ReserveSeats(int studentsCount, int cellIndex) void
         +FreeSeats(int studentsCount, int cellIndex) void
+        +ClearBookings() void
     }
 
     class GroupRequirement {
-        +GroupRequirementMTM Info
+        +Guid DisciplineId
+        +int RequiredHours
         +int FulfilledHours
         +bool IsFulfilled()
     }
 
     class TeacherCompetence {
-        +TeacherCompetenceMTM Info
+        +Guid DisciplineId
     }
 
     %% --- ОБМЕЖЕННЯ ---
@@ -112,34 +133,33 @@ classDiagram
 
     class DailyLimitConstraint {
         -IParticipant _owner
-        +DailyLimitConstraintMTM Info
         -int _maxLessonsPerDay
-        +DailyLimitConstraint(IParticipant owner, int maxLessonsPerDay)
+        -int _cellsPerDay
+        +DailyLimitConstraint(IParticipant owner, int maxLessonsPerDay, int cellsPerDay)
     }
 
     class TimeOffConstraint {
-        +TimeOffConstraintMTM Info
         -int[] _unavailableCells
         +TimeOffConstraint(int[] unavailableCells)
     }
 
     class MaxConsecutiveLessonsConstraint {
         -IParticipant _owner
-        +MaxConsecutiveLessonsConstraintMTM Info
         -int _maxConsecutive
-        +MaxConsecutiveLessonsConstraint(IParticipant owner, int maxConsecutive)
+        -int _cellsPerDay
+        +MaxConsecutiveLessonsConstraint(IParticipant owner, int maxConsecutive, int cellsPerDay)
     }
 
     class SpecificDayConstraint {
-        +SpecificDayConstraintMTM Info
         -int[] _allowedDays
-        +SpecificDayConstraint(int[] allowedDays)
+        -int _cellsPerDay
+        +SpecificDayConstraint(int[] allowedDays, int cellsPerDay)
     }
 
     class SpecificTimeConstraint {
-        +SpecificTimeConstraintMTM Info
         -int[] _allowedCellsInDay
-        +SpecificTimeConstraint(int[] allowedCellsInDay)
+        -int _cellsPerDay
+        +SpecificTimeConstraint(int[] allowedCellsInDay, int cellsPerDay)
     }
 
     %% --- ВІДНОШЕННЯ ТА ВИКОРИСТАННЯ (Залежності) ---
@@ -173,112 +193,117 @@ classDiagram
 
     DailyLimitConstraint o-- IParticipant : використовує як _owner
     MaxConsecutiveLessonsConstraint o-- IParticipant : використовує як _owner
-
 ```
 
-### UML Діаграма (Ієрархія MTM / DTO)
+### UML Діаграма (Ієрархія UI Models (Presentation Layer))
 
 ```mermaid
 %%{init: {'useMaxWidth': false}}%%
 classDiagram
     direction LR
 
-    %% --- ПАРАЛЕЛЬНА ІЄРАРХІЯ MTM ---
-    class ScheduleMTM {
-        +ScheduleConfig Config
-        +ObservableCollection~TeacherMTM~ Teachers
-        +ObservableCollection~StudentGroupMTM~ Groups
-        +ObservableCollection~RoomMTM~ Rooms
-        +ObservableCollection~DisciplineMTM~ Disciplines
-        +MapToModel() Schedule
-    }
-
-    class TeacherMTM {
+    %% --- ПАРАЛЕЛЬНА ІЄРАРХІЯ UI MODELS ---
+    class IParticipantUI {
+        <<interface>>
         +Guid Id
         +string Name
+    }
+
+    class ScheduleUI {
+        +ScheduleConfig Config
+        +ObservableCollection~TeacherUI~ Teachers
+        +ObservableCollection~StudentGroupUI~ Groups
+        +ObservableCollection~RoomUI~ Rooms
+        +ObservableCollection~DisciplineUI~ Disciplines
+        +Schedule LastResult
+        +MapToModel() Schedule
+        +TryGenerate(out string errorMessage) bool
+    }
+
+    class TeacherUI {
+        +Guid Id
+        +string FirstName
+        +string LastName
+        +string Patronymic
+        +string Name
         +int TargetHours
-        +List~TeacherCompetenceMTM~ Competences
-        +ObservableCollection~ConstraintMTM~ Constraints
+        +ObservableCollection~TeacherCompetenceUI~ Competences
+        +ObservableCollection~IConstraintUI~ Constraints
         +MapToModel(ScheduleConfig config) Teacher
     }
-    class StudentGroupMTM {
+    class StudentGroupUI {
         +Guid Id
         +string Name
         +int StudentsCount
-        +List~GroupRequirementMTM~ Requirements
-        +ObservableCollection~ConstraintMTM~ Constraints
+        +ObservableCollection~GroupRequirementUI~ Requirements
+        +ObservableCollection~IConstraintUI~ Constraints
         +MapToModel(ScheduleConfig config) StudentGroup
     }
-    class RoomMTM {
+    class RoomUI {
         +Guid Id
         +string Name
         +int Capacity
         +MapToModel(ScheduleConfig config) Room
     }
-    class DisciplineMTM {
+    class DisciplineUI {
         +Guid Id
         +string Name
-        +ObservableCollection~ConstraintMTM~ Constraints
+        +ObservableCollection~IConstraintUI~ Constraints
         +MapToModel(ScheduleConfig config) Discipline
     }
-    class ConstraintMTM {
-        <<abstract>>
-        +int CellsPerDay
-        +MapToModel(object owner, ScheduleConfig config) IConstraint
+
+    IParticipantUI <|.. RoomUI
+    IParticipantUI <|.. TeacherUI
+    IParticipantUI <|.. StudentGroupUI
+    IParticipantUI <|.. DisciplineUI
+    class IConstraintUI {
+        <<interface>>
+        +string DisplayName
+        +MapToModel(IParticipant owner, ScheduleConfig config) IConstraint
     }
-    class DailyLimitConstraintMTM {
+    class DailyLimitConstraintUI {
         +int MaxLessonsPerDay
-        +MapToModel(object owner, ScheduleConfig config) IConstraint
+        +MapToModel(IParticipant owner, ScheduleConfig config) IConstraint
     }
-    class TimeOffConstraintMTM {
+    class TimeOffConstraintUI {
         +int[] UnavailableCells
-        +MapToModel(object owner, ScheduleConfig config) IConstraint
+        +MapToModel(IParticipant owner, ScheduleConfig config) IConstraint
     }
-    class MaxConsecutiveLessonsConstraintMTM {
+    class MaxConsecutiveLessonsConstraintUI {
         +int MaxConsecutive
-        +MapToModel(object owner, ScheduleConfig config) IConstraint
-    }
-    class SpecificDayConstraintMTM {
-        +int[] AllowedDays
-        +MapToModel(object owner, ScheduleConfig config) IConstraint
-    }
-    class SpecificTimeConstraintMTM {
-        +int[] AllowedCellsInDay
-        +MapToModel(object owner, ScheduleConfig config) IConstraint
+        +MapToModel(IParticipant owner, ScheduleConfig config) IConstraint
     }
 
-    class GroupRequirementMTM {
+    class GroupRequirementUI {
         +Guid DisciplineId
         +int RequiredHours
         +MapToModel() GroupRequirement
     }
-    class TeacherCompetenceMTM {
+    class TeacherCompetenceUI {
         +Guid DisciplineId
         +MapToModel() TeacherCompetence
     }
-    ScheduleMTM ..> Schedule : MapToModel() розгортає
-    ScheduleMTM *-- TeacherMTM
-    ScheduleMTM *-- StudentGroupMTM
-    ScheduleMTM *-- RoomMTM
-    ScheduleMTM *-- DisciplineMTM
-    TeacherMTM *-- ConstraintMTM
-    StudentGroupMTM *-- ConstraintMTM
-    DisciplineMTM *-- ConstraintMTM
-    StudentGroupMTM *-- GroupRequirementMTM
-    TeacherMTM *-- TeacherCompetenceMTM
-    GroupRequirementMTM ..> GroupRequirement : MapToModel() створює
-    TeacherCompetenceMTM ..> TeacherCompetence : MapToModel() створює
-    ConstraintMTM <|-- DailyLimitConstraintMTM
-    ConstraintMTM <|-- TimeOffConstraintMTM
-    ConstraintMTM <|-- MaxConsecutiveLessonsConstraintMTM
-    ConstraintMTM <|-- SpecificDayConstraintMTM
-    ConstraintMTM <|-- SpecificTimeConstraintMTM
+    ScheduleUI ..> Schedule : MapToModel() розгортає
+    ScheduleUI *-- TeacherUI
+    ScheduleUI *-- StudentGroupUI
+    ScheduleUI *-- RoomUI
+    ScheduleUI *-- DisciplineUI
+    TeacherUI *-- IConstraintUI
+    StudentGroupUI *-- IConstraintUI
+    DisciplineUI *-- IConstraintUI
+    StudentGroupUI *-- GroupRequirementUI
+    TeacherUI *-- TeacherCompetenceUI
+    GroupRequirementUI ..> GroupRequirement : MapToModel() створює
+    TeacherCompetenceUI ..> TeacherCompetence : MapToModel() створює
+    IConstraintUI <|.. DailyLimitConstraintUI
+    IConstraintUI <|.. TimeOffConstraintUI
+    IConstraintUI <|.. MaxConsecutiveLessonsConstraintUI
 
-    TeacherMTM ..> Teacher : MapToModel() створює
-    StudentGroupMTM ..> StudentGroup : MapToModel() створює
-    RoomMTM ..> Room : MapToModel() створює
-    DisciplineMTM ..> Discipline : MapToModel() створює
-    ConstraintMTM ..> IConstraint : MapToModel() створює
+    TeacherUI ..> Teacher : MapToModel() створює
+    StudentGroupUI ..> StudentGroup : MapToModel() створює
+    RoomUI ..> Room : MapToModel() створює
+    DisciplineUI ..> Discipline : MapToModel() створює
+    IConstraintUI ..> IConstraint : MapToModel() створює
 
 ```
 
@@ -367,14 +392,14 @@ flowchart LR
 
 ## Архітектура Інтерфейсу (UI Flow)
 
-Для мобільного/десктопного застосунку на базі **.NET MAUI** ми використовуємо паттерн `AppShell` з бічним меню (Flyout) або вкладками (TabBar) для швидкого доступу до основних розділів, та стекову навігацію (Push/Pop) для сторінок редагування.
+Для застосунку на базі **.NET MAUI** використовується патерн `AppShell` з бічним меню (Flyout) для швидкого доступу до основних розділів, та стекова навігація (Push/Pop через Shell Routes) для сторінок редагування.
 
 ```mermaid
 flowchart TD
     %% Головне меню
-    Shell["AppShell / Головне Меню"]
+    Shell["AppShell / Бічне Меню (Flyout)"]
 
-    %% Основні сторінки (Вкладки/Пункти меню)
+    %% Основні сторінки (Пункти FlyoutItem)
     Shell --> Dashboard["DashboardPage"]
     Shell --> Settings["SettingsPage"]
     Shell --> Disciplines["DisciplinesPage"]
@@ -388,28 +413,52 @@ flowchart TD
     Teachers -- "Редагувати" --> TeacherEdit["TeacherEditPage"]
     Groups -- "Редагувати" --> GroupEdit["GroupEditPage"]
     
-    %% Модальне вікно вибору дисциплін
-    TeacherEdit -. "Відкриває" .-> SelectionModal["DisciplineSelectionPage (Модальне вікно)"]
-    GroupEdit -. "Відкриває" .-> SelectionModal
+    %% Вбудований компонент вибору дисциплін
+    TeacherEdit -. "Вбудований компонент" .-> SelectionModal["DisciplineSelection (Frame Popup)"]
+    GroupEdit -. "Вбудований компонент" .-> SelectionModal
     
     %% Логіка генерації
     Dashboard -- "Генерація" --> ScheduleResult["ScheduleResultPage"]
 ```
 
 ### Деталі взаємодії (UI Flow)
-1. **Головне меню (Flyout/Tabs)**: Швидка навігація між списками сутностей та налаштуваннями.
-2. **DisciplineEditPage**: Дозволяє задати назву дисципліни та налаштувати специфічні для неї обмеження.
+1. **Головне меню (Flyout)**: Швидка навігація бічним меню між списками сутностей та налаштуваннями.
+2. **DisciplineEditPage**: Дозволяє задати назву дисципліни та налаштувати обмеження (через вбудовану форму `ConstraintForm`).
 3. **RoomEditPage**: Дозволяє задати назву (номер) аудиторії та її місткість (`Capacity`).
 4. **TeacherEditPage / GroupEditPage**: 
    - Налаштовує параметри викладача/групи.
-   - Для прив'язки компетенцій чи вимог користувач відкриває **DisciplineSelectionPage**.
-   - **DisciplineSelectionPage**: Окреме модальне вікно або випадаючий компонент із рядком пошуку.
-   - Має міні-меню (ConstraintForm) для додавання обмежень (з ручним сортуванням за пріоритетом).
+   - Для додавання компетенцій чи вимог містить вбудований компонент **DisciplineSelection** (`Frame`), який відкривається прямо на сторінці з рядком живого пошуку.
+   - Містить форму **ConstraintForm** для додавання обмежень (з ручним упорядкуванням drag-and-drop).
 
 ## Архітектура ViewModels (MVVM)
 
-У цій версії архітектури **ViewModels працюють виключно з MTM (MapToModel)**, діючи як "губка", що накопичує налаштування користувача. 
-Класи доменної моделі (`Teacher`, `Schedule` тощо) не існують у пам'яті постійно. Вони конструюються динамічно з цих MTM **лише в момент натискання кнопки Генерації**, отримуючи актуальні розміри сітки, після чого відпрацьовують алгоритм і знищуються.
+У цій версії архітектури **ViewModels працюють виключно з UI моделями (Presentation Models)**, діючи як "губка", що накопичує налаштування користувача. 
+Класи доменної моделі (`Teacher`, `Schedule` тощо) не існують у пам'яті постійно. Вони конструюються динамічно з цих UI моделей **лише в момент натискання кнопки Генерації**, отримуючи актуальні розміри сітки, після чого відпрацьовують алгоритм і знищуються.
+
+### Уніфікація та усунення дублювання (Шаблони проектування)
+
+Для усунення надлишкового бойлерплейту архітектуру ViewModels оптимізовано за допомогою узагальнених базових класів та компонентного підходу:
+
+1. **Уніфікований шар спискових моделей (`BaseListViewModel<TEntity>`)**:
+   - Реалізує шаблонний життєвий цикл CRUD для сутностей, що реалізують `IParticipantUI`:
+     - Навігаційні команди створення (`AddCommand`) та редагування (`EditCommand`) з переходом через Shell (`GoToAsync`).
+     - Команда видалення (`DeleteCommand`).
+     - Повноцінна підтримка Drag-and-Drop із реордерингом елементів списку (`DragStartingCommand`, `DropCommand` та `Items.Move`).
+   - Спискові моделі учасників (`TeachersViewModel`, `RoomsViewModel`, `DisciplinesViewModel`, `StudentGroupsViewModel`) винесені в окрему підпапку `ViewModels/Participants/` (простір імен `Lab1MAUI.ViewModels.Participants`) за аналогією до `Models/UI/Participants/`. Вони є лаконічними типізованими спадкоємцями `BaseListViewModel<TEntity>`, що конфігурують джерело даних і роут для DI та сторінок.
+
+2. **Інкапсуляція управління обмеженнями (`ConstraintsEditorViewModel`)**:
+   - Відокремлений компонент, який інкапсулює колекцію обмежень `Constraints`, форму вибору `ConstraintFormViewModel`, команди видалення та перетягування обмежень.
+   - Забезпечує стандартизоване копіювання правил при завантаженні та збереженні через методи `LoadFrom(...)` та `ApplyTo(...)`.
+
+3. **Уніфікований шар редагування (`BaseEditViewModel<TEntity>`)**:
+   - `BaseEditViewModel<TEntity>`: автоматизує обробку Shell `[QueryProperty]` для завантаження за ID або створення нового екземпляра (`"new"`), керує станом `IsNew`, надає гачок асинхронної валідації `ValidateBeforeSaveAsync()`, синхронізацію в колекції `ScheduleUI` та зворотну навігацію `..`. 
+   - Моделі редагування (`TeacherEditViewModel`, `GroupEditViewModel`, `DisciplineEditViewModel`, `RoomEditViewModel`) напряму наслідують `BaseEditViewModel<TEntity>`, утворюючи просту пласку ієрархію без проміжних класів, та використовують композицію з дочірніми компонентами `ConstraintsEditorViewModel` і `DisciplineSelectionViewModel`.
+   - **Структура папок**: Усі класи редагування, базові моделі та форми винесені в окрему підпапку `ViewModels/Edit/` (простір імен `Lab1MAUI.ViewModels.Edit`), а відповідні XAML-сторінки редагування — у підпапку `Views/Edit/` (простір імен `Lab1MAUI.Views.Edit`), тоді як у коренях `ViewModels/` та `Views/` залишаються головні сторінкові компоненти.
+
+4. **Чітке структурування учасників розкладу (`Participants`) у Domain та Presentation (UI) шарах**:
+   - **`Models/Schedule/Participants/`**: підпапка містить виключно сутності, що реалізують доменний інтерфейс `IParticipant` (`Teacher`, `StudentGroup`, `Discipline`, `Room`, `IParticipant`). Допоміжні класи зв'язків та вимог (`GroupRequirement`, `TeacherCompetence`), які не наслідують `IParticipant`, винесені безпосередньо в корінь `Models/Schedule/`.
+   - **`Models/UI/Participants/`**: дзеркальна структура в шарі представлення (UI). Містить інтерфейс `IParticipantUI` (що містить `Guid Id` та `string Name`) та всі сутності-учасники: `TeacherUI`, `StudentGroupUI`, `DisciplineUI`, `RoomUI`. Загальні або допоміжні класи (`GroupRequirementUI`, `TeacherCompetenceUI`, `ScheduleUI`) розташовані на рівні `Models/UI/`.
+
 
 ```mermaid
 %%{init: {'useMaxWidth': false}}%%
@@ -428,10 +477,46 @@ classDiagram
         #SetProperty~T~(ref T backingStore, T value, string propertyName) bool
     }
 
+    class BaseListViewModel~TEntity~ {
+        <<abstract>>
+        +ObservableCollection~TEntity~ Items
+        +string EditPageRoute
+        +ICommand AddCommand
+        +ICommand EditCommand
+        +ICommand DeleteCommand
+        +ICommand DragStartingCommand
+        +ICommand DropCommand
+    }
+
+    class BaseEditViewModel~TEntity~ {
+        <<abstract>>
+        #ScheduleUI ScheduleUI
+        #ObservableCollection~TEntity~ EntityCollection
+        +TEntity Entity
+        +bool IsNew
+        +ICommand SaveCommand
+        +LoadEntityById(string value) void
+        #LoadData(TEntity entity)*
+        #ApplyData(TEntity entity)*
+        #ValidateBeforeSaveAsync()* Task~bool~
+        #SaveAsync() Task
+    }
+
+    class ConstraintsEditorViewModel {
+        +ObservableCollection~IConstraintUI~ Constraints
+        +ConstraintFormViewModel ConstraintForm
+        +ICommand DeleteConstraintCommand
+        +ICommand DragStartingConstraintCommand
+        +ICommand DropConstraintCommand
+        +LoadFrom(IEnumerable~IConstraintUI~) void
+        +ApplyTo(ICollection~IConstraintUI~) void
+    }
+
     class DashboardViewModel {
         +int TotalTeachers
         +int TotalGroups
         +int TotalDisciplines
+        +bool IsGenerating
         +ICommand GenerateScheduleCommand
     }
     
@@ -443,74 +528,56 @@ classDiagram
         +int TotalCells
     }
     
-    class DisciplinesViewModel {
-        +Collection~DisciplineMTM~ Disciplines
-        +ICommand AddDisciplineCommand
-        +ICommand EditDisciplineCommand
-        +ICommand DeleteDisciplineCommand
-        +ICommand DragStartingCommand
-        +ICommand DropCommand
-    }
+    class DisciplinesViewModel
     
     class DisciplineEditViewModel {
         +string Name
-        +Collection~ConstraintMTM~ Constraints
-        +ICommand SaveCommand
-        +ICommand DeleteConstraintCommand
+        +string DisciplineId
     }
 
-    class RoomsViewModel {
-        +Collection~RoomMTM~ Rooms
-        +ICommand AddRoomCommand
-        +ICommand EditRoomCommand
-        +ICommand DeleteRoomCommand
-    }
+    class RoomsViewModel
     
     class RoomEditViewModel {
         +string Name
         +int Capacity
-        +ICommand SaveCommand
+        +string RoomId
     }
 
-    class TeachersViewModel {
-        +Collection~TeacherMTM~ Teachers
-        +ICommand AddTeacherCommand
-        +ICommand EditTeacherCommand
-        +ICommand DeleteTeacherCommand
-    }
+    class TeachersViewModel
     
     class TeacherEditViewModel {
         +string FirstName
         +string LastName
+        +string Patronymic
         +int TargetHours
-        +Collection~TeacherCompetenceMTM~ Competences
-        +Collection~ConstraintMTM~ Constraints
-        +ICommand SaveCommand
+        +string TeacherId
+        +ObservableCollection~TeacherCompetenceItem~ Competences
         +ICommand AddCompetenceCommand
         +ICommand DeleteCompetenceCommand
-        +ICommand DeleteConstraintCommand
     }
 
-    class StudentGroupsViewModel {
-        +Collection~StudentGroupMTM~ Groups
-        +ICommand AddGroupCommand
-        +ICommand EditGroupCommand
-        +ICommand DeleteGroupCommand
-    }
+    class StudentGroupsViewModel
     
     class GroupEditViewModel {
-        +string GroupName
+        +string Name
         +int StudentsCount
-        +Collection~GroupRequirementMTM~ Requirements
-        +Collection~ConstraintMTM~ Constraints
-        +ICommand SaveCommand
+        +string GroupId
+        +ObservableCollection~GroupRequirementItem~ Requirements
         +ICommand AddRequirementCommand
         +ICommand DeleteRequirementCommand
-        +ICommand DeleteConstraintCommand
+    }
+
+    class DisciplineSelectionViewModel {
+        +ObservableCollection~DisciplineUI~ FilteredDisciplines
+        +string SearchQuery
+        +bool IsVisible
+        +ICommand SelectCommand
+        +ICommand CancelCommand
+        +Open() void
     }
 
     class ConstraintFormViewModel {
-        +Collection~string~ ConstraintTypes
+        +ObservableCollection~string~ ConstraintTypes
         +string SelectedConstraintType
         +int DailyLimitValue
         +int MaxConsecutiveValue
@@ -519,40 +586,52 @@ classDiagram
     }
 
     class ScheduleResultViewModel {
-        +Collection~UnassignedDisplay~ UnassignedLessons
-        +Collection~GroupScheduleDisplay~ GroupSchedules
+        +ObservableCollection~UnassignedDisplay~ UnassignedLessons
+        +ObservableCollection~GroupScheduleDisplay~ GroupSchedules
+        +bool HasUnassignedLessons
     }
 
     %% Наслідування від BaseViewModel
     INotifyPropertyChanged <|.. BaseViewModel
+    BaseViewModel <|-- BaseListViewModel
+    BaseViewModel <|-- BaseEditViewModel
+    BaseViewModel <|-- ConstraintsEditorViewModel
     BaseViewModel <|-- DashboardViewModel
     BaseViewModel <|-- SettingsViewModel
-    BaseViewModel <|-- DisciplinesViewModel
-    BaseViewModel <|-- DisciplineEditViewModel
-    BaseViewModel <|-- RoomsViewModel
-    BaseViewModel <|-- RoomEditViewModel
-    BaseViewModel <|-- TeachersViewModel
-    BaseViewModel <|-- TeacherEditViewModel
-    BaseViewModel <|-- StudentGroupsViewModel
-    BaseViewModel <|-- GroupEditViewModel
     BaseViewModel <|-- ScheduleResultViewModel
     BaseViewModel <|-- ConstraintFormViewModel
+    BaseViewModel <|-- DisciplineSelectionViewModel
+
+    %% Наслідування спискових моделей
+    BaseListViewModel <|-- DisciplinesViewModel
+    BaseListViewModel <|-- RoomsViewModel
+    BaseListViewModel <|-- TeachersViewModel
+    BaseListViewModel <|-- StudentGroupsViewModel
+
+    %% Наслідування форм редагування
+    BaseEditViewModel <|-- RoomEditViewModel
+    BaseEditViewModel <|-- DisciplineEditViewModel
+    BaseEditViewModel <|-- TeacherEditViewModel
+    BaseEditViewModel <|-- GroupEditViewModel
     
     %% Композиція (дочірні ViewModels)
-    DisciplineEditViewModel *-- ConstraintFormViewModel
-    TeacherEditViewModel *-- ConstraintFormViewModel
-    GroupEditViewModel *-- ConstraintFormViewModel
+    DisciplineEditViewModel *-- ConstraintsEditorViewModel
+    TeacherEditViewModel *-- ConstraintsEditorViewModel
+    GroupEditViewModel *-- ConstraintsEditorViewModel
+    ConstraintsEditorViewModel *-- ConstraintFormViewModel
+    TeacherEditViewModel *-- DisciplineSelectionViewModel
+    GroupEditViewModel *-- DisciplineSelectionViewModel
 ```
 
 ## Покриття Тестами (Testing Suite)
 
-Проєкт містить 50+ автоматизованих xUnit тестів, що гарантують надійність алгоритму та архітектури.
+Проєкт містить 51 автоматизований xUnit тест, що гарантує надійність алгоритму та архітектури.
 
-1. **Базові тести алгоритму (`FunctionalAlgorithmTests`, `ScheduleGenerationTests`)**: Перевіряють здатність алгоритму заповнювати сітку без конфліктів, розпізнавати нестачу аудиторій та обробляти базові прив'язки.
+1. **Базові тести алгоритму (`FunctionalAlgorithmTests`, `ScheduleGenerationTests`, `ScheduleTests`)**: Перевіряють здатність алгоритму заповнювати сітку без конфліктів, розпізнавати нестачу аудиторій, перевіряти місткість та обробляти базові прив'язки й розмірності.
 2. **Ізольовані обмеження (`IndividualConstraintTests`, `ConstraintTests`)**: Тестують поведінку `DailyLimit`, `MaxConsecutive`, `SpecificDay`, `SpecificTime` та `TimeOff` незалежно для кожного типу учасника.
-3. **Комбінаторні тести (`CombinatorialScheduleTests`, `ComplexScheduleTests`)**: Велика сітка тестів (>15 сценаріїв), які перевіряють багатовимірні перетини:
+3. **Комбінаторні тести та граничні випадки (`CombinatorialScheduleTests`, `ComplexScheduleTests`, `EdgeCaseTests`)**: Набір тестів для перевірки складних багатовимірних перетинів та екстремальних умов:
    - Конфлікти між обмеженнями Групи та Викладача (напр. *Teacher TimeOff vs Group Specific Day*).
    - Динаміка "пляшкових горлечок" (bottlenecks) через нестачу кімнат чи годин викладача.
-   - Екстремальні значення (напр. ліміт 0 уроків на день, або заборона ставити підряд в умовах короткого дня).
+   - Екстремальні значення та граничні випадки (напр. ліміт 0 уроків на день, заборона ставити підряд в умовах короткого дня, неможливі вимоги).
    - Масштабні стрес-тести (100+ уроків, 10 груп, 10 викладачів).
-4. **Тести інфраструктури UI/MTM (`ViewModelIntegrationTests`, `MultipleRegenerationTests`)**: Перевіряють, що багаторазова регенерація розкладу через UI-прошарок не залишає "брудного стану" (сміттєві лічильники годин, хибні маски) між натисканнями кнопки.
+4. **Тести інфраструктури UI Models (`ViewModelIntegrationTests`, `MultipleRegenerationTests`)**: Перевіряють, що багаторазова регенерація розкладу через UI-прошарок не залишає "брудного стану" (сміттєві лічильники годин, хибні маски) між натисканнями кнопки.

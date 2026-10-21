@@ -1,6 +1,10 @@
-using Lab1MAUI.Models.MTM;
+using Lab1MAUI.Models.UI;
+using Lab1MAUI.Models.UI.Participants;
 using Lab1MAUI.ViewModels;
+using Lab1MAUI.ViewModels.Edit;
+using Lab1MAUI.ViewModels.Participants;
 using Lab1MAUI.Views;
+using Lab1MAUI.Views.Edit;
 using Microsoft.Extensions.Logging;
 
 namespace Lab1MAUI;
@@ -17,20 +21,15 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
+        
+        builder.Services.AddSingleton<ScheduleUI>();
 
-        
-
-        
-        
-        
-        builder.Services.AddSingleton<ScheduleMTM>();
-
-        
+        // ViewModels
         builder.Services.AddSingleton<DashboardViewModel>();
+        builder.Services.AddSingleton<SettingsViewModel>();
         builder.Services.AddSingleton<TeachersViewModel>();
         builder.Services.AddSingleton<RoomsViewModel>();
         builder.Services.AddSingleton<StudentGroupsViewModel>();
-        builder.Services.AddSingleton<SettingsViewModel>();
         builder.Services.AddSingleton<DisciplinesViewModel>();
         builder.Services.AddTransient<DisciplineEditViewModel>();
         builder.Services.AddTransient<ScheduleResultViewModel>();

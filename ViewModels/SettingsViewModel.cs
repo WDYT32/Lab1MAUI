@@ -1,71 +1,76 @@
-using Lab1MAUI.Models.MTM;
+using Lab1MAUI.Models.UI;
 using Lab1MAUI.Models.Schedule;
 
 namespace Lab1MAUI.ViewModels
 {
     public class SettingsViewModel : BaseViewModel
     {
-        private readonly ScheduleMTM _scheduleMTM;
+        private readonly ScheduleUI _scheduleUI;
+        private ScheduleConfig Config => _scheduleUI.Config;
 
+        private int _days;
         public int Days
         {
-            get => _scheduleMTM.Config.Days;
+            get => _days;
             set
             {
-                if (_scheduleMTM.Config.Days != value)
+                if (SetProperty(ref _days, value))
                 {
-                    _scheduleMTM.Config.Days = value;
-                    OnPropertyChanged();
+                    Config.Days = value;
                     OnPropertyChanged(nameof(TotalCells));
                 }
             }
         }
 
+        private int _cellsPerDay;
         public int CellsPerDay
         {
-            get => _scheduleMTM.Config.CellsPerDay;
+            get => _cellsPerDay;
             set
             {
-                if (_scheduleMTM.Config.CellsPerDay != value)
+                if (SetProperty(ref _cellsPerDay, value))
                 {
-                    _scheduleMTM.Config.CellsPerDay = value;
-                    OnPropertyChanged();
+                    Config.CellsPerDay = value;
                     OnPropertyChanged(nameof(TotalCells));
                 }
             }
         }
 
+        private int _minLessonsPerDay;
         public int MinLessonsPerDay
         {
-            get => _scheduleMTM.Config.MinLessonsPerDay;
+            get => _minLessonsPerDay;
             set
             {
-                if (_scheduleMTM.Config.MinLessonsPerDay != value)
+                if (SetProperty(ref _minLessonsPerDay, value))
                 {
-                    _scheduleMTM.Config.MinLessonsPerDay = value;
-                    OnPropertyChanged();
+                    Config.MinLessonsPerDay = value;
                 }
             }
         }
 
+        private int _lessonDurationMinutes;
         public int LessonDurationMinutes
         {
-            get => _scheduleMTM.Config.LessonDurationMinutes;
+            get => _lessonDurationMinutes;
             set
             {
-                if (_scheduleMTM.Config.LessonDurationMinutes != value)
+                if (SetProperty(ref _lessonDurationMinutes, value))
                 {
-                    _scheduleMTM.Config.LessonDurationMinutes = value;
-                    OnPropertyChanged();
+                    Config.LessonDurationMinutes = value;
                 }
             }
         }
 
-        public int TotalCells => _scheduleMTM.Config.TotalCells;
+        public int TotalCells => Config.TotalCells;
 
-        public SettingsViewModel(ScheduleMTM scheduleMTM)
+        public SettingsViewModel(ScheduleUI scheduleUI)
         {
-            _scheduleMTM = scheduleMTM;
+            _scheduleUI = scheduleUI;
+            _days = Config.Days;
+            _cellsPerDay = Config.CellsPerDay;
+            _minLessonsPerDay = Config.MinLessonsPerDay;
+            _lessonDurationMinutes = Config.LessonDurationMinutes;
         }
     }
 }

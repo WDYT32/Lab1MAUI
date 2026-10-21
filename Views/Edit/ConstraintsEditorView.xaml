@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:Lab1MAUI.Views.Edit"
+             x:Class="Lab1MAUI.Views.Edit.ConstraintsEditorView"
+             x:Name="ThisControl">
+
+    <VerticalStackLayout Spacing="15" BindingContext="{Binding ConstraintsEditor}">
+        <Label Text="Обмеження" FontSize="18" FontAttributes="Bold" />
+
+        <Border BindingContext="{Binding ConstraintForm}" BackgroundColor="#F5F5F5" Padding="15" StrokeShape="RoundRectangle 8" StrokeThickness="0">
+            <VerticalStackLayout Spacing="10">
+                <Picker Title="Виберіть тип обмеження" 
+                        ItemsSource="{Binding ConstraintTypes}" 
+                        SelectedItem="{Binding SelectedConstraintType}" />
+
+                <VerticalStackLayout IsVisible="{Binding IsDailyLimitSelected}" Spacing="5">
+                    <Label Text="💡 Це обмеження не дозволить розкладу поставити більше уроків, ніж вказано, в межах одного дня." FontSize="12" TextColor="Gray" FontAttributes="Italic" />
+                    <Label Text="Максимум уроків на день:" FontSize="14" />
+                    <Entry Text="{Binding DailyLimitValue, Mode=TwoWay}" Keyboard="Numeric" BackgroundColor="White" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout IsVisible="{Binding IsMaxConsecutiveSelected}" Spacing="5">
+                    <Label Text="💡 Це обмеження змусить розклад розбивати підряд йдучі уроки вікном або уроком іншого предмета." FontSize="12" TextColor="Gray" FontAttributes="Italic" />
+                    <Label Text="Максимум уроків підряд:" FontSize="14" />
+                    <Entry Text="{Binding MaxConsecutiveValue, Mode=TwoWay}" Keyboard="Numeric" BackgroundColor="White" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout IsVisible="{Binding IsTimeOffSelected}" Spacing="5">
+                    <Label Text="💡 Заблокує конкретну клітинку, щоб там ніколи не було уроків. (0 = понеділок перша пара, 8 = вівторок перша пара)." FontSize="12" TextColor="Gray" FontAttributes="Italic" />
+                    <Label Text="Індекс заблокованого уроку (клітинки):" FontSize="14" />
+                    <Entry Text="{Binding TimeOffCellIndex, Mode=TwoWay}" Keyboard="Numeric" BackgroundColor="White" />
+                </VerticalStackLayout>
+
+                <Button Text="Додати обмеження в список" Command="{Binding AddConstraintCommand}" BackgroundColor="#2B0B98" TextColor="White" Margin="0,10,0,0" />
+            </VerticalStackLayout>
+        </Border>
+
+        <Label Text="💡 Підказка: Затисніть та перетягніть обмеження (Drag &amp; Drop) для зміни його важливості. Ті, що вище, виконуються першими." FontSize="12" TextColor="#4198B4" FontAttributes="Italic" />
+
+        <CollectionView ItemsSource="{Binding Constraints}" HeightRequest="200">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <SwipeView>
+                        <SwipeView.RightItems>
+                            <SwipeItems>
+                                <SwipeItem Text="Видалити" BackgroundColor="Red" 
+                                           Command="{Binding Source={x:Reference ThisControl}, Path=BindingContext.ConstraintsEditor.DeleteConstraintCommand}" 
+                                           CommandParameter="{Binding .}" />
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+
+                        <Border Margin="0,5" Padding="10" StrokeShape="RoundRectangle 8" BackgroundColor="White" StrokeThickness="0">
+                            <Border.GestureRecognizers>
+                                <DragGestureRecognizer CanDrag="True" 
+                                                       DragStartingCommand="{Binding Source={x:Reference ThisControl}, Path=BindingContext.ConstraintsEditor.DragStartingConstraintCommand}" 
+                                                       DragStartingCommandParameter="{Binding .}" />
+                                <DropGestureRecognizer AllowDrop="True" 
+                                                       DropCommand="{Binding Source={x:Reference ThisControl}, Path=BindingContext.ConstraintsEditor.DropConstraintCommand}" 
+                                                       DropCommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <Grid>
+                                <Label Text="{Binding DisplayName}" FontSize="14" VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </VerticalStackLayout>
+</ContentView>

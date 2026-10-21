@@ -1,4 +1,5 @@
 using Lab1MAUI.Views;
+using Lab1MAUI.Views.Edit;
 using Microsoft.Maui.Controls;
 
 namespace Lab1MAUI

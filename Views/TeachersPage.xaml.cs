@@ -1,5 +1,5 @@
 using Microsoft.Maui.Controls;
-using Lab1MAUI.ViewModels;
+using Lab1MAUI.ViewModels.Participants;
 
 namespace Lab1MAUI.Views;
 

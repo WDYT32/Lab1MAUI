@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:Lab1MAUI.ViewModels.Edit"
+             x:Class="Lab1MAUI.Views.Edit.DisciplineSelectionView"
+             x:Name="ThisControl">
+
+    <Border Stroke="#2B0B98" StrokeThickness="1" StrokeShape="RoundRectangle 10" BackgroundColor="#E5E7EB" Padding="15" 
+            IsVisible="{Binding DisciplineSelection.IsVisible}" Margin="0,10">
+        <VerticalStackLayout Spacing="10" BindingContext="{Binding DisciplineSelection}">
+            <Label Text="Пошук дисципліни" FontAttributes="Bold" FontSize="16" />
+            <Entry Text="{Binding SearchQuery, Mode=TwoWay}" Placeholder="Введіть назву..." BackgroundColor="White" />
+            
+            <CollectionView ItemsSource="{Binding FilteredDisciplines}" HeightRequest="120">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Margin="0,3" Padding="10" StrokeShape="RoundRectangle 5" BackgroundColor="White" StrokeThickness="0">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:DisciplineSelectionViewModel}}, Path=SelectCommand}" CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <Label Text="{Binding Name}" FontSize="14" />
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            
+            <Button Text="Скасувати" Command="{Binding CancelCommand}" BackgroundColor="Gray" TextColor="White" />
+        </VerticalStackLayout>
+    </Border>
+</ContentView>

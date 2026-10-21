@@ -1,7 +1,4 @@
 using Lab1MAUI.Models.Schedule.Constraints;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Lab1MAUI.Models.Schedule.Participants
 {

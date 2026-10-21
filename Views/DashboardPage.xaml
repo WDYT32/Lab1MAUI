@@ -7,13 +7,13 @@
     <VerticalStackLayout Padding="30" Spacing="20" VerticalOptions="Center">
         <Label Text="Генератор Розкладу" FontSize="28" FontAttributes="Bold" HorizontalOptions="Center" />
         
-        <Frame Padding="20" CornerRadius="10" BackgroundColor="#F3F4F6">
+        <Border Padding="20" StrokeShape="RoundRectangle 10" BackgroundColor="#F3F4F6" StrokeThickness="0">
             <VerticalStackLayout Spacing="10">
                 <Label Text="{Binding TotalTeachers, StringFormat='Викладачів у базі: {0}'}" FontSize="18" />
                 <Label Text="{Binding TotalGroups, StringFormat='Груп у базі: {0}'}" FontSize="18" />
                 <Label Text="{Binding TotalDisciplines, StringFormat='Дисциплін у базі: {0}'}" FontSize="18" />
             </VerticalStackLayout>
-        </Frame>
+        </Border>
 
         <Button Text="Згенерувати розклад" 
                 Command="{Binding GenerateScheduleCommand}"

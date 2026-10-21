@@ -1,7 +1,10 @@
-using Lab1MAUI.Models.MTM;
-using Lab1MAUI.Models.MTM.Constraints;
+using Lab1MAUI.Models.UI;
+using Lab1MAUI.Models.UI.Participants;
+using Lab1MAUI.Models.UI.Constraints;
 using Lab1MAUI.Models.Schedule;
 using Lab1MAUI.ViewModels;
+using Lab1MAUI.ViewModels.Edit;
+using Lab1MAUI.ViewModels.Participants;
 using System;
 using System.Linq;
 using Xunit;
@@ -10,53 +13,53 @@ namespace Lab1MAUI.Tests
 {
     public class ViewModelIntegrationTests
     {
-        private ScheduleMTM CreateEmptyScheduleMTM()
+        private ScheduleUI CreateEmptyScheduleUI()
         {
-            var mtm = new ScheduleMTM();
-            mtm.Config.Days = 1;
-            mtm.Config.CellsPerDay = 5;
-            return mtm;
+            var ui = new ScheduleUI();
+            ui.Config.Days = 1;
+            ui.Config.CellsPerDay = 5;
+            return ui;
         }
 
         [Fact]
         public void GroupEditViewModel_AddsNewGroup()
         {
-            var mtm = CreateEmptyScheduleMTM();
-            var vm = new GroupEditViewModel(mtm);
+            var ui = CreateEmptyScheduleUI();
+            var vm = new GroupEditViewModel(ui);
 
             vm.GroupId = "new";
-            vm.GroupName = "TestGroup";
+            vm.Name = "TestGroup";
             vm.StudentsCount = 25;
             vm.SaveCommand.Execute(null);
 
-            Assert.Single(mtm.Groups);
-            Assert.Equal("TestGroup", mtm.Groups[0].Name);
-            Assert.Equal(25, mtm.Groups[0].StudentsCount);
+            Assert.Single(ui.Groups);
+            Assert.Equal("TestGroup", ui.Groups[0].Name);
+            Assert.Equal(25, ui.Groups[0].StudentsCount);
         }
 
         [Fact]
         public void GroupEditViewModel_EditsExistingGroup()
         {
-            var mtm = CreateEmptyScheduleMTM();
-            var group = new StudentGroupMTM { Id = Guid.NewGuid(), Name = "OldName", StudentsCount = 10 };
-            mtm.Groups.Add(group);
+            var ui = CreateEmptyScheduleUI();
+            var group = new StudentGroupUI { Id = Guid.NewGuid(), Name = "OldName", StudentsCount = 10 };
+            ui.Groups.Add(group);
 
-            var vm = new GroupEditViewModel(mtm);
+            var vm = new GroupEditViewModel(ui);
             vm.GroupId = group.Id.ToString();
-            vm.GroupName = "NewName";
+            vm.Name = "NewName";
             vm.StudentsCount = 30;
             vm.SaveCommand.Execute(null);
 
-            Assert.Single(mtm.Groups);
-            Assert.Equal("NewName", mtm.Groups[0].Name);
-            Assert.Equal(30, mtm.Groups[0].StudentsCount);
+            Assert.Single(ui.Groups);
+            Assert.Equal("NewName", ui.Groups[0].Name);
+            Assert.Equal(30, ui.Groups[0].StudentsCount);
         }
 
         [Fact]
         public void TeacherEditViewModel_AddsNewTeacher()
         {
-            var mtm = CreateEmptyScheduleMTM();
-            var vm = new TeacherEditViewModel(mtm);
+            var ui = CreateEmptyScheduleUI();
+            var vm = new TeacherEditViewModel(ui);
 
             vm.TeacherId = "new";
             vm.FirstName = "John";
@@ -65,90 +68,127 @@ namespace Lab1MAUI.Tests
             vm.TargetHours = 2;
             vm.SaveCommand.Execute(null);
 
-            Assert.Single(mtm.Teachers);
-            Assert.Equal("Doe John Smith", mtm.Teachers[0].Name);
-            Assert.Equal(2, mtm.Teachers[0].TargetHours);
+            Assert.Single(ui.Teachers);
+            Assert.Equal("Doe John Smith", ui.Teachers[0].Name);
+            Assert.Equal(2, ui.Teachers[0].TargetHours);
         }
 
         [Fact]
         public void RoomEditViewModel_AddsNewRoom()
         {
-            var mtm = CreateEmptyScheduleMTM();
-            var vm = new RoomEditViewModel(mtm);
+            var ui = CreateEmptyScheduleUI();
+            var vm = new RoomEditViewModel(ui);
 
             vm.RoomId = "new";
             vm.Name = "202";
             vm.Capacity = 40;
             vm.SaveCommand.Execute(null);
 
-            Assert.Single(mtm.Rooms);
-            Assert.Equal("202", mtm.Rooms[0].Name);
-            Assert.Equal(40, mtm.Rooms[0].Capacity);
+            Assert.Single(ui.Rooms);
+            Assert.Equal("202", ui.Rooms[0].Name);
+            Assert.Equal(40, ui.Rooms[0].Capacity);
         }
 
         [Fact]
         public void RoomsViewModel_DeletesRoom()
         {
-            var mtm = CreateEmptyScheduleMTM();
-            var room = new RoomMTM { Id = Guid.NewGuid(), Name = "202", Capacity = 40 };
-            mtm.Rooms.Add(room);
+            var ui = CreateEmptyScheduleUI();
+            var room = new RoomUI { Id = Guid.NewGuid(), Name = "202", Capacity = 40 };
+            ui.Rooms.Add(room);
 
-            var vm = new RoomsViewModel(mtm);
-            Assert.Single(vm.Rooms);
+            var vm = new RoomsViewModel(ui);
+            Assert.Single(vm.Items);
 
-            vm.DeleteRoomCommand.Execute(room);
+            vm.DeleteCommand.Execute(room);
 
-            Assert.Empty(mtm.Rooms);
-            Assert.Empty(vm.Rooms);
+            Assert.Empty(ui.Rooms);
+            Assert.Empty(vm.Items);
         }
 
         [Fact]
         public void TeachersViewModel_DeletesTeacher()
         {
-            var mtm = CreateEmptyScheduleMTM();
-            var t = new TeacherMTM { Id = Guid.NewGuid(), Name = "T1" };
-            mtm.Teachers.Add(t);
+            var ui = CreateEmptyScheduleUI();
+            var t = new TeacherUI { Id = Guid.NewGuid(), Name = "T1" };
+            ui.Teachers.Add(t);
 
-            var vm = new TeachersViewModel(mtm);
-            Assert.Single(vm.Teachers);
+            var vm = new TeachersViewModel(ui);
+            Assert.Single(vm.Items);
 
-            vm.DeleteTeacherCommand.Execute(t);
+            vm.DeleteCommand.Execute(t);
 
-            Assert.Empty(mtm.Teachers);
-            Assert.Empty(vm.Teachers);
+            Assert.Empty(ui.Teachers);
+            Assert.Empty(vm.Items);
         }
 
         [Fact]
-        public void ConstraintFormViewModel_AddsDailyLimitConstraintMTM()
+        public void ConstraintFormViewModel_AddsDailyLimitConstraintUI()
         {
-            var mtm = CreateEmptyScheduleMTM();
+            var ui = CreateEmptyScheduleUI();
 
-            var vm = new ConstraintFormViewModel(ConstraintOwnerType.Teacher, mtm.Config);
-            vm.SelectedConstraintType = "Ліміт занять на день (DailyLimit)";
+            var vm = new ConstraintFormViewModel(ConstraintOwnerType.Teacher, ui.Config);
+            vm.SelectType(FormConstraintType.DailyLimit);
             vm.DailyLimitValue = 2;
 
-            ConstraintMTM added = null;
+            IConstraintUI? added = null;
             vm.OnConstraintAdded += c => added = c;
 
             vm.AddConstraintCommand.Execute(null);
 
             Assert.NotNull(added);
-            Assert.IsType<DailyLimitConstraintMTM>(added);
-            Assert.Equal(2, ((DailyLimitConstraintMTM)added).MaxLessonsPerDay);
+            Assert.IsType<DailyLimitConstraintUI>(added);
+            Assert.Equal(2, ((DailyLimitConstraintUI)added).MaxLessonsPerDay);
         }
 
         [Fact]
         public void DisciplineEditViewModel_SavesDiscipline()
         {
-            var mtm = CreateEmptyScheduleMTM();
-            var vm = new DisciplineEditViewModel(mtm);
+            var ui = CreateEmptyScheduleUI();
+            var vm = new DisciplineEditViewModel(ui);
 
             vm.DisciplineId = "new";
             vm.Name = "History";
             vm.SaveCommand.Execute(null);
 
-            Assert.Single(mtm.Disciplines);
-            Assert.Equal("History", mtm.Disciplines[0].Name);
+            Assert.Single(ui.Disciplines);
+            Assert.Equal("History", ui.Disciplines[0].Name);
+        }
+
+        [Fact]
+        public void SettingsViewModel_UpdatesConfigAndRaisesNotifications()
+        {
+            var ui = CreateEmptyScheduleUI();
+            var vm = new SettingsViewModel(ui);
+
+            var changedProperties = new System.Collections.Generic.List<string>();
+            vm.PropertyChanged += (s, e) => changedProperties.Add(e.PropertyName);
+
+            vm.Days = 6;
+            Assert.Equal(6, ui.Config.Days);
+            Assert.Contains("Days", changedProperties);
+            Assert.Contains("TotalCells", changedProperties);
+
+            changedProperties.Clear();
+            vm.CellsPerDay = 6;
+            Assert.Equal(6, ui.Config.CellsPerDay);
+            Assert.Equal(36, vm.TotalCells);
+            Assert.Contains("CellsPerDay", changedProperties);
+            Assert.Contains("TotalCells", changedProperties);
+
+            changedProperties.Clear();
+            vm.MinLessonsPerDay = 2;
+            Assert.Equal(2, ui.Config.MinLessonsPerDay);
+            Assert.Contains("MinLessonsPerDay", changedProperties);
+
+            changedProperties.Clear();
+            vm.LessonDurationMinutes = 45;
+            Assert.Equal(45, ui.Config.LessonDurationMinutes);
+            Assert.Contains("LessonDurationMinutes", changedProperties);
+
+            // Setting same value should not raise event
+            changedProperties.Clear();
+            vm.LessonDurationMinutes = 45;
+            Assert.Empty(changedProperties);
         }
     }
 }

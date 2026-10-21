@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:viewmodels="clr-namespace:Lab1MAUI.ViewModels"
+             xmlns:viewmodels="clr-namespace:Lab1MAUI.ViewModels.Participants"
              x:Class="Lab1MAUI.Views.StudentGroupsPage"
              Title="Групи">
 
     <VerticalStackLayout Padding="20" Spacing="15">
         
         <Button Text="+ Додати нову групу" 
-                Command="{Binding AddGroupCommand}" 
+                Command="{Binding AddCommand}" 
                 BackgroundColor="#2B0B98" 
                 TextColor="White"
                 HeightRequest="50"
@@ -19,7 +19,7 @@
         <Label Text="Список груп" FontSize="16" FontAttributes="Bold" />
         <Label Text="💡 Підказка: Затисніть та перетягніть групу (Drag &amp; Drop), щоб змінити її глобальний пріоритет. Вища позиція у списку дає більшу вагу всім її обмеженням." FontSize="12" TextColor="#4198B4" FontAttributes="Italic" />
 
-        <CollectionView ItemsSource="{Binding Groups}">
+        <CollectionView ItemsSource="{Binding Items}">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <SwipeView>
@@ -27,29 +27,29 @@
                             <SwipeItems>
                                 <SwipeItem Text="Редагувати" 
                                            BackgroundColor="Blue" 
-                                           Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:StudentGroupsViewModel}}, Path=EditGroupCommand}" 
+                                           Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:StudentGroupsViewModel}}, Path=EditCommand}" 
                                            CommandParameter="{Binding .}" />
                                 <SwipeItem Text="Видалити" 
                                            BackgroundColor="Red" 
-                                           Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:StudentGroupsViewModel}}, Path=DeleteGroupCommand}" 
+                                           Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:StudentGroupsViewModel}}, Path=DeleteCommand}" 
                                            CommandParameter="{Binding .}" />
                             </SwipeItems>
                         </SwipeView.RightItems>
                         
-                        <Frame Margin="0,5" Padding="15" CornerRadius="8" HasShadow="True" BackgroundColor="White">
-                            <Frame.GestureRecognizers>
+                        <Border Margin="0,5" Padding="15" StrokeShape="RoundRectangle 8" BackgroundColor="White" StrokeThickness="0">
+                            <Border.GestureRecognizers>
                                 <DragGestureRecognizer CanDrag="True" 
                                                        DragStartingCommand="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:StudentGroupsViewModel}}, Path=DragStartingCommand}" 
                                                        DragStartingCommandParameter="{Binding .}" />
                                 <DropGestureRecognizer AllowDrop="True" 
                                                        DropCommand="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:StudentGroupsViewModel}}, Path=DropCommand}" 
                                                        DropCommandParameter="{Binding .}" />
-                            </Frame.GestureRecognizers>
+                            </Border.GestureRecognizers>
                             <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
                                 <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold" />
                                 <Label Text="{Binding StudentsCount, StringFormat='({0} чол.)'}" FontSize="14" TextColor="Gray" VerticalOptions="Center" />
                             </HorizontalStackLayout>
-                        </Frame>
+                        </Border>
                     </SwipeView>
                 </DataTemplate>
             </CollectionView.ItemTemplate>

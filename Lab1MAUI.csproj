@@ -72,9 +72,12 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Models\MTM\" />
+      <Folder Include="Models\UI\" />
+      <Folder Include="Models\UI\Participants\" />
       <Folder Include="ViewModels\" />
+      <Folder Include="ViewModels\Edit\" />
       <Folder Include="Views\" />
+      <Folder Include="Views\Edit\" />
     </ItemGroup>
 
 </Project>

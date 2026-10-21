@@ -1,5 +1,5 @@
-using Lab1MAUI.Models.MTM;
-using Lab1MAUI.Models.MTM.Constraints;
+using Lab1MAUI.Models.UI;
+using Lab1MAUI.Models.UI.Constraints;
 using Lab1MAUI.Models.Schedule;
 using Microsoft.Maui.Controls;
 using System;
@@ -9,51 +9,44 @@ namespace Lab1MAUI.ViewModels;
 
 public class DashboardViewModel : BaseViewModel
 {
-    private readonly ScheduleMTM _scheduleMTM;
+    private readonly ScheduleUI _scheduleUI;
 
-    public int TotalTeachers => _scheduleMTM.Teachers.Count;
-    public int TotalGroups => _scheduleMTM.Groups.Count;
-    public int TotalDisciplines => _scheduleMTM.Disciplines.Count;
+    public int TotalTeachers => _scheduleUI.Teachers.Count;
+    public int TotalGroups => _scheduleUI.Groups.Count;
+    public int TotalDisciplines => _scheduleUI.Disciplines.Count;
 
-    private bool _isGenerating;
     public bool IsGenerating
     {
-        get => _isGenerating;
-        set => SetProperty(ref _isGenerating, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public ICommand GenerateScheduleCommand { get; }
 
-    public DashboardViewModel(ScheduleMTM scheduleMTM)
+    public DashboardViewModel(ScheduleUI scheduleUI)
     {
-        _scheduleMTM = scheduleMTM;
+        _scheduleUI = scheduleUI;
 
-        
+        _scheduleUI.Teachers.CollectionChanged += (s, e) => OnPropertyChanged(nameof(TotalTeachers));
+        _scheduleUI.Groups.CollectionChanged += (s, e) => OnPropertyChanged(nameof(TotalGroups));
+        _scheduleUI.Disciplines.CollectionChanged += (s, e) => OnPropertyChanged(nameof(TotalDisciplines));
+
         GenerateScheduleCommand = new Command(async () => await GenerateScheduleAsync(), () => !IsGenerating);
     }
 
-    public void RefreshStats()
-    {
-        OnPropertyChanged(nameof(TotalTeachers));
-        OnPropertyChanged(nameof(TotalGroups));
-        OnPropertyChanged(nameof(TotalDisciplines));
-    }
-
-    private async System.Threading.Tasks.Task GenerateScheduleAsync()
+    private async Task GenerateScheduleAsync()
     {
         IsGenerating = true;
         ((Command)GenerateScheduleCommand).ChangeCanExecute();
 
-        
-        await System.Threading.Tasks.Task.Delay(500);
+        await Task.Delay(500);
 
-        
-        bool success = _scheduleMTM.TryGenerate(out string errorMessage);
+        bool success = _scheduleUI.TryGenerate(out string errorMessage);
 
         IsGenerating = false;
         ((Command)GenerateScheduleCommand).ChangeCanExecute();
 
-        
-        await BaseViewModel.NavigationAction("ScheduleResultPage");
+        if (Shell.Current != null)
+            await Shell.Current.GoToAsync("ScheduleResultPage");
     }
 }

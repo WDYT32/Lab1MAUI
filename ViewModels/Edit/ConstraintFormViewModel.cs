@@ -1,0 +1,141 @@
+using Lab1MAUI.Models.UI.Constraints;
+using Lab1MAUI.Models.Schedule;
+using System.Collections.ObjectModel;
+using System.Windows.Input;
+
+namespace Lab1MAUI.ViewModels.Edit
+{
+    public enum ConstraintOwnerType
+    {
+        Teacher,
+        Group,
+        Discipline
+    }
+
+    public enum FormConstraintType
+    {
+        DailyLimit,
+        MaxConsecutive,
+        TimeOff
+    }
+
+    public class ConstraintTypeItem
+    {
+        public FormConstraintType Type { get; }
+        public string DisplayName { get; }
+
+        public ConstraintTypeItem(FormConstraintType type, string displayName)
+        {
+            Type = type;
+            DisplayName = displayName;
+        }
+
+        public override string ToString() => DisplayName;
+
+        public static implicit operator ConstraintTypeItem?(string? name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return null;
+            if (name.Contains("DailyLimit", StringComparison.OrdinalIgnoreCase))
+                return new ConstraintTypeItem(FormConstraintType.DailyLimit, name);
+            if (name.Contains("MaxConsecutive", StringComparison.OrdinalIgnoreCase))
+                return new ConstraintTypeItem(FormConstraintType.MaxConsecutive, name);
+            if (name.Contains("TimeOff", StringComparison.OrdinalIgnoreCase))
+                return new ConstraintTypeItem(FormConstraintType.TimeOff, name);
+            return null;
+        }
+    }
+
+    public class ConstraintFormViewModel : BaseViewModel
+    {
+        private readonly ConstraintOwnerType _ownerType;
+        private readonly ScheduleConfig _config;
+
+        public event Action<IConstraintUI>? OnConstraintAdded;
+
+        public ObservableCollection<ConstraintTypeItem> ConstraintTypes { get; } = new();
+
+        public ConstraintTypeItem? SelectedConstraintType
+        {
+            get;
+            set
+            {
+                if (SetProperty(ref field, value))
+                {
+                    OnPropertyChanged(nameof(IsDailyLimitSelected));
+                    OnPropertyChanged(nameof(IsMaxConsecutiveSelected));
+                    OnPropertyChanged(nameof(IsTimeOffSelected));
+                }
+            }
+        }
+
+        public bool IsDailyLimitSelected    => SelectedConstraintType?.Type == FormConstraintType.DailyLimit;
+        public bool IsMaxConsecutiveSelected => SelectedConstraintType?.Type == FormConstraintType.MaxConsecutive;
+        public bool IsTimeOffSelected        => SelectedConstraintType?.Type == FormConstraintType.TimeOff;
+
+        public int DailyLimitValue
+        {
+            get;
+            set => SetProperty(ref field, value);
+        } = 3;
+
+        public int MaxConsecutiveValue
+        {
+            get;
+            set => SetProperty(ref field, value);
+        } = 2;
+
+        public int TimeOffCellIndex
+        {
+            get;
+            set => SetProperty(ref field, value);
+        } = 0;
+
+        public ICommand AddConstraintCommand { get; }
+
+        public ConstraintFormViewModel(ConstraintOwnerType ownerType, ScheduleConfig config)
+        {
+            _ownerType = ownerType;
+            _config = config;
+
+            if (ownerType == ConstraintOwnerType.Teacher)
+            {
+                ConstraintTypes.Add(new ConstraintTypeItem(FormConstraintType.DailyLimit, "Ліміт занять на день (DailyLimit)"));
+                ConstraintTypes.Add(new ConstraintTypeItem(FormConstraintType.MaxConsecutive, "Підрядні уроки (MaxConsecutive)"));
+                ConstraintTypes.Add(new ConstraintTypeItem(FormConstraintType.TimeOff, "Вихідний час (TimeOff)"));
+            }
+            else if (ownerType == ConstraintOwnerType.Group)
+            {
+                ConstraintTypes.Add(new ConstraintTypeItem(FormConstraintType.DailyLimit, "Ліміт занять на день (DailyLimit)"));
+                ConstraintTypes.Add(new ConstraintTypeItem(FormConstraintType.MaxConsecutive, "Підрядні уроки (MaxConsecutive)"));
+            }
+            else if (ownerType == ConstraintOwnerType.Discipline)
+            {
+                ConstraintTypes.Add(new ConstraintTypeItem(FormConstraintType.DailyLimit, "Ліміт занять на день (DailyLimit)"));
+            }
+
+            AddConstraintCommand = new Command(() =>
+            {
+                if (SelectedConstraintType == null) return;
+
+                IConstraintUI? newConstraint = SelectedConstraintType.Type switch
+                {
+                    FormConstraintType.DailyLimit => new DailyLimitConstraintUI { MaxLessonsPerDay = DailyLimitValue },
+                    FormConstraintType.MaxConsecutive => new MaxConsecutiveLessonsConstraintUI { MaxConsecutive = MaxConsecutiveValue },
+                    FormConstraintType.TimeOff => new TimeOffConstraintUI { UnavailableCells = [TimeOffCellIndex] },
+                    _ => null
+                };
+
+                if (newConstraint != null)
+                {
+                    OnConstraintAdded?.Invoke(newConstraint);
+                    SelectedConstraintType = null;
+                }
+            });
+        }
+
+        public void SelectType(FormConstraintType type)
+        {
+            SelectedConstraintType = ConstraintTypes.FirstOrDefault(c => c.Type == type);
+        }
+    }
+}
